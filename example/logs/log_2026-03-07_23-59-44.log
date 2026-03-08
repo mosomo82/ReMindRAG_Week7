@@ -1,0 +1,8 @@
+ReMindRag - INFO - Start Initail ReMindRag.
+ReMindRag - INFO - Initialize ReMindRag Successfully.
+ReMindRag - INFO - Load File: C:\Users\mtuan\.gemini\antigravity\scratch\ReMindRAG\example\example_data.txt.
+Database - INFO - Chunking...
+Database - INFO - Get 2 Chunks.
+Database - INFO - Do Infomation Extraction in Chunk 0/2
+Database - INFO - Do Infomation Extraction in Chunk 1/2
+Database - INFO - Finish Infomation Extraction.

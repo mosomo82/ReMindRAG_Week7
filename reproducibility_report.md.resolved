@@ -1,0 +1,278 @@
+# ReMindRAG Reproducibility Report
+
+**Date:** 2026-03-07 | **Test Suite:** 17/17 passed | **Docker:** Builds and runs successfully
+
+---
+
+## Phase 1 -- Repository Understanding
+
+### Structure Summary
+
+```
+ReMindRAG/
++-- ReMindRag/              # Core library
+|   +-- llms/               # LLM agent interface (OpenAI API)
+|   +-- embeddings/         # HuggingFace sentence-transformers
+|   +-- chunking/           # Naive + Meta chunking strategies
+|   +-- database/           # ChromaDB vector store + KG extraction
+|   +-- generator/          # RAG response generation + path finding
+|   +-- kg/                 # Knowledge graph construction
+|   +-- webui/              # Flask-based web interface
+|   +-- utils/              # Logging, decorators
++-- eval/                   # LooGLE + HotpotQA evaluation scripts
++-- example/                # Minimal usage example
++-- Dockerfile              # Multi-stage deterministic build
++-- requirements.txt        # Pinned dependencies (146 packages)
++-- test_reproducibility.py # Automated 17-test audit suite
++-- repro_test.py           # Quick smoke test with mock agents
+```
+
+### Python Version
+
+**Required:** 3.13.2 (specified in README)
+
+### Dependencies
+
+146 packages pinned in [requirements.txt](file:///c:/Users/mtuan/.gemini/antigravity/scratch/ReMindRAG/requirements.txt). Key ones:
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| torch | 2.6.0+cu126 | Deep learning framework |
+| transformers | 4.49.0 | HuggingFace model loading |
+| sentence-transformers | 4.0.2 | Embedding models |
+| chromadb | 0.6.3 | Vector database |
+| openai | 1.65.5 | LLM API client |
+| networkx | 3.4.2 | Knowledge graph |
+| flask | 3.1.0 | WebUI |
+| nltk | 3.9.1 | Sentence tokenization |
+
+### Missing Files / Artifacts Identified
+
+| Item | Status |
+|------|--------|
+| [api_key.json](file:///c:/Users/mtuan/.gemini/antigravity/scratch/ReMindRAG/api_key.json) | User must create (contains OpenAI credentials) |
+| `model_cache/` | Auto-downloaded from HuggingFace on first run |
+| `eval/dataset_cache/LooGLE-rewrite-data/` | Must download from [Google Drive](https://drive.google.com/file/d/1gv7rfiuMEVNMABttp6SZLzSJR-sZNfU5/view?usp=sharing) |
+
+---
+
+## Phase 2 -- Environment Setup
+
+### Conda Environment
+
+```shell
+conda create -n ReMindRag python==3.13.2
+conda activate ReMindRag
+pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu126
+```
+
+> [!IMPORTANT]
+> The `--extra-index-url` flag is **required** -- CUDA 12.6 PyTorch wheels are hosted on PyTorch's server, not PyPI.
+
+### Dockerfile (Created)
+
+[Dockerfile](file:///c:/Users/mtuan/.gemini/antigravity/scratch/ReMindRAG/Dockerfile) -- Multi-stage build:
+- **Stage 1 (builder):** Installs all pip packages with build tools
+- **Stage 2 (runtime):** Copies only site-packages, no compilers
+- Pre-downloads NLTK `punkt_tab` data
+- Pre-creates all runtime directories
+- Filters out Windows-only packages automatically
+
+### .dockerignore (Created)
+
+[.dockerignore](file:///c:/Users/mtuan/.gemini/antigravity/scratch/ReMindRAG/.dockerignore) -- Excludes `Rag_Cache/`, `venv/`, `model_cache/`, `__pycache__/` to prevent stale data and reduce image size.
+
+### Dependency Pinning
+
+All 146 packages version-pinned in `requirements.txt`. `requirements_repro.txt` re-encoded from UTF-16 to UTF-8 (was unreadable by pip).
+
+---
+
+## Phase 3 -- Credential & External Dependency Detection
+
+### API Keys Required
+
+| Service | Config Location | Required? |
+|---------|----------------|-----------|
+| OpenAI API | `api_key.json` (`base_url` + `api_key`) | Yes -- for real inference |
+| HuggingFace Hub | `HF_TOKEN` env var or `huggingface-cli login` | Yes -- for model downloads |
+
+### External Services
+
+| Service | Usage | Offline Capable? |
+|---------|-------|------------------|
+| OpenAI API | Entity extraction, answer generation, answer checking | No -- requires live API |
+| HuggingFace Hub | Model download (`nomic-embed-text-v2-moe`) | Yes, after first download (cached locally) |
+| ChromaDB | Local persistent vector store | Yes -- fully local |
+
+### Can This Run Offline?
+
+**Partially.** After initial model download, only the LLM inference requires network. The embedding model, ChromaDB, and KG construction all run locally.
+
+### Estimated API Cost
+
+| Operation | Model | Est. tokens/call | Calls per doc | Cost |
+|-----------|-------|-------------------|---------------|------|
+| Entity extraction | gpt-4o-mini | ~2K | 1 per chunk | ~$0.001/chunk |
+| Answer generation | gpt-4o-mini | ~3K | 1 per query | ~$0.002/query |
+| Judge (rewrite) | gpt-4o | ~1K | 1 per eval Q | ~$0.01/question |
+| Judge (check) | gpt-4o | ~500 | 1 per eval Q | ~$0.005/question |
+
+**Full LooGLE eval (20 titles, ~100 questions):** ~$2-5 USD
+
+---
+
+## Phase 4 -- Hardware & Resource Analysis
+
+### GPU Requirement
+
+**Optional.** GPU accelerates embedding computation but is not required.
+
+### CUDA / Device Usage
+
+| File | Usage | Fallback |
+|------|-------|----------|
+| `embeddings/hg_sentence_transformers.py` | `torch.cuda.is_available()` auto-detection | CPU fallback built-in |
+| `eval/eval_LooGLE.py` | `set_seed()` configures `cuda.manual_seed_all` | Only if GPU available |
+
+### VRAM Estimate
+
+| Model | Parameters | Est. VRAM |
+|-------|-----------|-----------|
+| nomic-embed-text-v2-moe | ~137M (MoE) | ~1 GB FP32 |
+| all-MiniLM-L6-v2 (test) | ~22M | ~100 MB |
+
+### CPU-Only Mode
+
+Works automatically -- `torch.cuda.is_available()` returns `False` on CPU-only systems and all code paths handle this.
+
+---
+
+## Phase 5 -- Data & Artifact Verification
+
+### Required Datasets
+
+| Dataset | Source | Location | Auto-download? |
+|---------|--------|----------|----------------|
+| LooGLE | HuggingFace `bigai-nlco/LooGLE` | `eval/dataset_cache/` | Yes |
+| LooGLE preprocessed | Google Drive zip | `eval/dataset_cache/LooGLE-rewrite-data/` | No -- manual |
+| HotpotQA | Local JSON files | `eval/dataset_cache/Hotpot/` | No -- manual |
+| Example data | In-repo | `example/example_data.txt` | Included |
+
+### Hard-coded Directories (Fixed)
+
+| Original | Fixed To |
+|----------|----------|
+| `save_dir + "/chroma_data"` | `os.path.join(save_dir, "chroma_data")` |
+| `save_dir + "/model_cache"` | `os.path.join(save_dir, "model_cache")` |
+| `sys.path.append('../')` | `EVAL_DIR = os.path.dirname(os.path.abspath(__file__))` |
+| `"../api_key.json"` | `os.path.join(REPO_ROOT, 'api_key.json')` |
+
+### Smoke Test Data
+
+`repro_test.py` uses `MockAgent` + `example_data.txt` -- no API key needed, validates full pipeline.
+
+---
+
+## Phase 6 -- Determinism & Result Verification
+
+### Random Seeds
+
+| Component | Status |
+|-----------|--------|
+| `random.seed()` | Fixed via `set_seed(42)` in `eval_LooGLE.py` |
+| `np.random.seed()` | Fixed via `set_seed(42)` |
+| `torch.manual_seed()` | Fixed via `set_seed(42)` |
+| `torch.cuda.manual_seed_all()` | Fixed (if GPU available) |
+| `cudnn.deterministic` | Set to `True` |
+| `cudnn.benchmark` | Set to `False` |
+
+### Seed CLI Control
+
+```shell
+python eval/eval_LooGLE.py --seed 42 --title_index 0 --data_type longdep_qa --question_type origin
+```
+
+### Non-Determinism Sources (Cannot Fix)
+
+| Source | Impact |
+|--------|--------|
+| OpenAI API responses | `temperature=0` reduces but does not eliminate variance |
+| Model version updates | OpenAI may update `gpt-4o-mini` weights silently |
+| HuggingFace model revisions | `nomic-embed-text-v2-moe` may receive updates |
+
+### Hyperparameter Logging
+
+Key parameters visible in eval script CLI args:
+- `--model_name` (backbone LLM)
+- `--judge_model_name` (evaluation judge LLM)  
+- `--seed` (random seed)
+- `edge_weight_coefficient=0.1`, `strong_connection_threshold=0.5` (hardcoded in eval scripts)
+
+---
+
+## Phase 7 -- Automated Debugging (Issues Found & Fixed)
+
+| # | Severity | Issue | Fix |
+|---|----------|-------|-----|
+| 1 | CRITICAL | `requirements_repro.txt` UTF-16 encoded | Re-encoded to UTF-8 |
+| 2 | CRITICAL | Missing `--extra-index-url` in README | Documented in install steps |
+| 3 | CRITICAL | `model_cache/` dir never created | `os.makedirs(exist_ok=True)` |
+| 4 | CRITICAL | `chroma_data/` dir never created | `os.makedirs(exist_ok=True)` |
+| 5 | CRITICAL | `logs/` dir never created | `os.makedirs(exist_ok=True)` |
+| 6 | CRITICAL | WebUI `temp/` dir never created | `os.makedirs(exist_ok=True)` |
+| 7 | HIGH | Judge model hardcoded to `gpt-4o` | Added `--judge_model_name` arg |
+| 8 | HIGH | LooGLE dataset provenance undocumented | Documented in README |
+| 9 | HIGH | `start_LooGLE.py` no resume guard | Added skip logic for completed tests |
+| 10 | HIGH | `daatabase_description` typo | Fixed in rag_main.py + preprocess.py |
+| 11 | MEDIUM | String path concatenation | Replaced with `os.path.join` |
+| 12 | MEDIUM | CWD-dependent path resolution | `__file__`-relative via EVAL_DIR |
+| 13 | MEDIUM | `trust_remote_code` undocumented | Noted in README |
+| 14 | MEDIUM | HF token ephemeral only | Added `huggingface-cli login` docs |
+
+---
+
+## Phase 8 -- Paper-to-Code Alignment
+
+### Core Components Implemented
+
+| Paper Component | Code Location | Status |
+|----------------|---------------|--------|
+| Knowledge Graph construction | `ReMindRag/kg/` | Implemented |
+| LLM-guided graph traversal | `ReMindRag/generator/pathfinder.py` | Implemented |
+| Edge weight reinforcement/punishment | `ReMindRag/database/chromaDB.py` (`enhance_edge_weight`, `punish_edge_weight`) | Implemented |
+| Chunk-level entity extraction | `ReMindRag/database/data_extract.py` | Implemented |
+| ChromaDB vector storage | `ReMindRag/database/chromaDB.py` | Implemented |
+| LooGLE evaluation | `eval/eval_LooGLE.py` | Implemented |
+| HotpotQA evaluation | `eval/eval_Hotpot.py` | Implemented |
+
+### Baselines
+
+No baseline implementations included -- the repo only contains the ReMindRAG method itself.
+
+### Hyperparameters Documented
+
+| Parameter | Value | Location |
+|-----------|-------|----------|
+| `edge_weight_coefficient` | 0.1 | `eval_LooGLE.py:L143` |
+| `strong_connection_threshold` | 0.5 | `eval_LooGLE.py:L144` |
+| `max_token_length` (chunker) | 750 | `eval_LooGLE.py:L94` |
+| `temperature` (LLM) | 0 | `openai_api.py:L37` |
+| `chunk_summary_threshold` | 5 (default) | `rag_main.py:L23` |
+
+---
+
+## Final Checklist
+
+| Item | Status | Evidence |
+|------|--------|----------|
+| Repo runs end-to-end | PASS | `repro_test.py` prints SUCCESS; `test_reproducibility.py` 17/17 |
+| Environment fully specified | PASS | `requirements.txt` (146 pinned), `Dockerfile`, conda instructions |
+| API credentials documented | PASS | README documents `api_key.json` format, `huggingface-cli login`, `HF_TOKEN` |
+| Dataset verified | PARTIAL | LooGLE auto-downloads; preprocessed data requires manual Google Drive download |
+| Model artifacts validated | PASS | `nomic-embed-text-v2-moe` auto-downloads; `all-MiniLM-L6-v2` for testing |
+| Metrics within expected variance | NOT TESTED | Requires OpenAI credits (account has `insufficient_quota`) |
+| No hidden manual steps | PASS | All directory creation automated; all paths `__file__`-relative |
+
+> [!WARNING]
+> **Metrics verification blocked** by OpenAI `insufficient_quota` error. The API key (`sk-proj-...`) authenticates correctly but the account has no credits. Add credits at [platform.openai.com/billing](https://platform.openai.com/billing) then re-run `example.py` or the LooGLE evaluation to verify output metrics match the paper.
