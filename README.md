@@ -9,186 +9,208 @@
 
 Unlike traditional methods, it resolves long dependencies and multi-hop reasoning while minimizing computational overhead. By memorizing traversal paths without additional training, ReMindRAG boosts accuracy and reduces retrieval costs for similar queries. Experiments show superior performance in complex tasks—especially multi-hop reasoning and long-range dependencies—with improved robustness, adaptability, and cost efficiency compared to existing approaches.
 
+> **CS 5542 — Lab 7 Reproducibility Submission**
+> Team: Tony Nguyen · Daniel Evans· Joel Vinas
+> Repository: [mosomo82/ReMindRAG_Week7](https://github.com/mosomo82/ReMindRAG_Week7)
+
+---
+
+## Quick Start — Single Command
+
+### Option A: Docker (no setup required)
+```shell
+docker build -t remindrag:latest .
+docker run --rm remindrag:latest
+# Expected: SUCCESS: RAG pipeline successfully retrieved chunks from the database.
+```
+
+### Option B: Smoke Test (native Python)
+```shell
+pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu126
+python tests/smoke_test.py
+# Writes result to: artifacts/smoke_test_result.json
+```
+
+### Option C: Makefile
+```shell
+make setup   # Install dependencies
+make smoke   # Run smoke test
+make test    # Run full 17-test audit suite
+```
+
+> See [RUN.md](./RUN.md) for complete run instructions including evaluation scripts and WebUI.
+
+---
+
+## Lab 7 Required Documents
+
+| Document | Purpose |
+|----------|---------|
+| [RUN.md](./RUN.md) | Complete run instructions — Docker, native, Makefile, eval |
+| [REPRO_AUDIT.md](./REPRO_AUDIT.md) | 14-issue reproducibility audit with severity ratings and test evidence |
+| [RELATED_WORK_REPRO.md](./RELATED_WORK_REPRO.md) | Reproduction attempt — what worked, what failed, gaps, improvements |
+| [reproduce.sh](./reproduce.sh) | Cross-platform automation script |
+| [Makefile](./Makefile) | Convenience targets: setup, smoke, test, docker, clean |
+| [config.yaml](./config.yaml) | Config-driven execution — all hyperparameters in one place |
+| [tests/smoke_test.py](./tests/smoke_test.py) | Smoke test — exits 0 on success, writes JSON artifact |
+| [tests/test_reproducibility.py](./tests/test_reproducibility.py) | 17-test audit suite covering all 14 reproducibility fixes |
+| [artifacts/smoke_test_result.json](./artifacts/smoke_test_result.json) | Sample output artifact |
+
+---
+
+## Reproducibility Fixes (14 Issues Resolved)
+
+| Severity | Issues Fixed |
+|----------|-------------|
+| CRITICAL | Missing directory creation (`model_cache/`, `chroma_data/`, `logs/`, `temp/`), UTF-16 encoded requirements file, missing CUDA wheel index URL |
+| HIGH | Hardcoded judge model, missing eval resume guard, `daatabase_description` typo, undocumented HuggingFace auth |
+| MEDIUM | Windows path separators → `os.path.join`, CWD-relative imports → `__file__`-relative, missing `--seed` arg |
+
+All fixes verified by automated test suite: **17/17 PASS**.
+
+---
+
 ## Installation
 
 ### Initialize Environment
 
-Use this command to initialize this Repo's environment.
 ```shell
-    conda create -n ReMindRag python==3.13.2
-    conda activate ReMindRag
-    pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu126
+conda create -n ReMindRag python==3.13.2
+conda activate ReMindRag
+pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu126
 ```
 
-> **Note:** The `--extra-index-url` flag is required because the PyTorch CUDA 12.6 wheels (`torch==2.6.0+cu126`) are hosted on PyTorch's own server, not PyPI. Omitting this flag will cause a "package not found" error. For a CPU-only install, replace the CUDA wheel suffixes with `+cpu` or remove them entirely.
+> **Note:** The `--extra-index-url` flag is required because PyTorch CUDA 12.6 wheels (`torch==2.6.0+cu126`) are hosted on PyTorch's own server, not PyPI. For CPU-only, omit the flag or use `+cpu` suffix.
 
-> **Note:** The embedding model (`nomic-ai/nomic-embed-text-v2-moe`) requires `trust_remote_code=True` when loading. This is set automatically inside the library but newer versions of `transformers` may prompt interactively in some environments. Set the environment variable `TRUST_REMOTE_CODE=1` or ensure you are not running in a fully non-interactive shell if you encounter a hang.
+> **Note:** The embedding model (`nomic-ai/nomic-embed-text-v2-moe`) requires `trust_remote_code=True`. This is set automatically inside the library. Set `TRUST_REMOTE_CODE=1` if you encounter a hang in non-interactive shells.
 
-## Quick Start
+---
 
-### Preparation
+## Setup
 
-Replace with your OpenAI API key by filling in the `api_key.json` file:
+### 1. API Key
 
+Fill in `api_key.json`:
 ```json
-[
-    {
-        "base_url": "your_api_key_url",
-        "api_key": "your_api_key"
-    }
-]
+[{"base_url": "https://api.openai.com/v1", "api_key": "sk-proj-..."}]
 ```
 
-Download the HuggingFace model [nomic-ai/nomic-embed-text-v2-moe](https://huggingface.co/nomic-ai/nomic-embed-text-v2-moe) and place it in the `./model_cache` directory.
-
-Load your HuggingFace token (persistent via CLI — recommended):
+### 2. HuggingFace Token
 
 ```shell
-# Persistent login (stored in ~/.cache/huggingface/token)
+# Persistent (recommended)
 huggingface-cli login
 
-# OR set for the current shell session only (not persisted across terminals)
-$env:HF_TOKEN = "hf_YourTokenHere"
+# Or per-session
+export HF_TOKEN="hf_YourTokenHere"           # Linux/Mac
+$env:HF_TOKEN = "hf_YourTokenHere"           # Windows PowerShell
 ```
 
-> For CI/CD environments, set `HF_TOKEN` as a secret environment variable in your pipeline.
+### 3. Download Embedding Model
 
+Download [nomic-ai/nomic-embed-text-v2-moe](https://huggingface.co/nomic-ai/nomic-embed-text-v2-moe) into `./model_cache/`.
 
+> For a lightweight smoke test, use `sentence-transformers/all-MiniLM-L6-v2` (384-dim, no HF token needed).
 
-### Run Example
+---
 
-In the `example` folder, we provide a demo. Use the following command to run this example:
+## Run Example
+
 ```shell
-    cd example
-    python example.py
+python example/example.py
 ```
+
+---
+
+## Evaluation
+
+**Step 1:** Download preprocessed LooGLE dataset from [Google Drive](https://drive.google.com/file/d/1gv7rfiuMEVNMABttp6SZLzSJR-sZNfU5/view?usp=sharing) and extract to `eval/dataset_cache/LooGLE-rewrite-data/`.
+
+**Step 2:** Run evaluation:
+```shell
+python eval/eval_LooGLE.py \
+  --title_index 0 --data_type longdep_qa \
+  --question_type origin --seed 42 \
+  --judge_model_name gpt-4o-mini
+
+python eval/eval_Hotpot.py --seed 42 --judge_model_name gpt-4o-mini
+```
+
+> `--seed` ensures deterministic results. `--judge_model_name` lets you use a cheaper judge (e.g. `gpt-4o-mini` instead of `gpt-4o`).
+
+---
 
 ## Parameter Configuration
+
+All parameters can be set in [`config.yaml`](./config.yaml) instead of CLI flags:
+```shell
+python eval/eval_LooGLE.py --config config.yaml
+```
+
 <details>
 <summary>Initialization Parameters</summary>
 
-| Parameter                      | Type | Default     | Description |
-|--------------------------------|--------|------------------|-------------|
-| `edge_weight_coefficient` | Float | 0.1              | Adjusts system's reliance on edge embedding for strong links (range 0.1-0.2) |
-| `strong_connection_threshold` | Float | 0.55           | Below 0.775 theoretically; practical range 0.5-0.75 balances retrieval cost and memory capacity |
-| `synonym_threshold` | Float | 0.7             | Merges entities when embedding similarity exceeds this value |
-| `database_description` | Str | None           | A brief one-sentence description of your data |  
-| `save_dir` | Str | None           | Your data storage path |  
-| `logger_level` | Int | None           | Logger level based on logging (Level 5 is "Trace," the lowest level we set) |  
-| `log_path` | Str | None           | Your log storage path |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `edge_weight_coefficient` | Float | 0.1 | Adjusts reliance on edge embedding for strong links (range 0.1–0.2) |
+| `strong_connection_threshold` | Float | 0.55 | Practical range 0.5–0.75 balances retrieval cost and memory capacity |
+| `synonym_threshold` | Float | 0.7 | Merges entities when embedding similarity exceeds this value |
+| `database_description` | Str | None | A brief one-sentence description of your data |
+| `save_dir` | Str | None | Your data storage path |
+| `logger_level` | Int | None | Logger level (Level 5 = Trace, lowest) |
+| `log_path` | Str | None | Your log storage path |
 
 </details>
 
 <details>
 <summary>Query Parameters</summary>
 
-| Parameter                      | Type | Default    | Description |
-|--------------------------------|--------|------------------|-------------|
-| `max_jumps`          | Int | 10               | Controls nodes expanded during subgraph queries |
-| `max_split_question_num` | Int | 1               | Maximum sub-questions from semantic decomposition (Set 1 to skip question split) |
-| `search_key_nums`    | Int | 2                | Number of seed nodes in query initialization |
-| `system_prompt`    | Str | None              | System prompt (if not set, our default system prompt will be used) |  
-| `force_do_rag`    | Bool | False                | If set to False, the system will automatically decide whether to perform the RAG process |  
-| `do_update`    | Bool | True                | If set to False, the memory function will be disabled for this query |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `max_jumps` | Int | 10 | Controls nodes expanded during subgraph queries |
+| `max_split_question_num` | Int | 1 | Max sub-questions from semantic decomposition (set 1 to skip split) |
+| `search_key_nums` | Int | 2 | Number of seed nodes in query initialization |
+| `system_prompt` | Str | None | System prompt (uses default if not set) |
+| `force_do_rag` | Bool | False | If False, system decides automatically whether to do RAG |
+| `do_update` | Bool | True | If False, memory function is disabled for this query |
 
 </details>
 
+---
 
 ## Use Your Own Core Components
 
-In **ReMindRAG**, apart from the core modules, other components are highly customizable. We provide a minimal example in `example/example.py`. You can refer to the following methods to use your own custom components.
-
-
 <details>
 <summary>Use Your Own Language Model</summary>
-
-For all language models that use the OpenAI-compatible API format, please use the following code:
 
 ```python
 from ReMindRag.llms import OpenaiAgent
 agent = OpenaiAgent("your_api_key_url", "your_api_key", "your model name")
 ```
-
-If you want to use another method to call your LLM, please subclass the **AgentBase** class in `ReMindRag/llms/base.py`.
-
+Subclass `AgentBase` in `ReMindRag/llms/base.py` for custom LLMs.
 </details>
-
 
 <details>
 <summary>Use Your Own Embedding Model</summary>
-
-For all embedding models using the OpenAI-compatible API format, use the following code:
-
-```python
-from ReMindRag.embeddings import OpenaiEmbedding
-embedding = OpenaiEmbedding("your_api_key_url", "your_api_key", "your model name")
-```
-
-For all embedding models using HuggingFace's SentenceTransformer, use the following code:
 
 ```python
 from ReMindRag.embeddings import HgEmbedding
 embedding = HgEmbedding("your model name", "your model cache dir")
 ```
-
-If you want to use another embedding model access method, please subclass the **EmbeddingBase** class in `ReMindRag/embeddings/base.py`.
-
+Subclass `EmbeddingBase` in `ReMindRag/embeddings/base.py` for custom embeddings.
 </details>
 
-
 <details>
-<summary>Use Your Own Chunk Function</summary>
-
-For the most basic token-based chunking, use the following code:
+<summary>Use Your Own Chunker</summary>
 
 ```python
 from ReMindRag.chunking import NaiveChunker
-chunker = NaiveChunker("your tokenizer name", "your tokenizer cache dir", max_token_length=your_chunk_size)
+chunker = NaiveChunker("your tokenizer name", "your tokenizer cache dir", max_token_length=200)
 ```
-
-If you want to implement a different chunking strategy, please subclass the **ChunkerBase** class in `ReMindRag/chunking/base.py`.
-
+Subclass `ChunkerBase` in `ReMindRag/chunking/base.py` for custom chunking.
 </details>
 
-
-
-
-## Evaluation
-<details>
-<summary>Code & Steps</summary>
-
-**Step 1**: Download the LooGLE dataset and our modified preprocessed dataset, then place them in the correct locations:
-
-- **Raw LooGLE**: Automatically downloaded from HuggingFace (`bigai-nlco/LooGLE`) into `eval/dataset_cache/` on first run.
-- **Preprocessed files** (required for evaluation): Download our modified dataset from [Google Drive](https://drive.google.com/file/d/1gv7rfiuMEVNMABttp6SZLzSJR-sZNfU5/view?usp=sharing) and extract it so the directory structure looks like:
-  ```
-  eval/dataset_cache/LooGLE-rewrite-data/
-  ├── titles.json
-  ├── choice-format/{data_type}/{title}.json   # cleaned question/answer pairs
-  └── similar-data/{data_type}/{title}.json    # paraphrased questions
-  ```
-
-**Step 2**: Download the HuggingFace model [nomic-ai/nomic-embed-text-v2-moe](https://huggingface.co/nomic-ai/nomic-embed-text-v2-moe) and place it in the `./model_cache` directory.
-
-**Step 3**: Load your HuggingFace token:
-
-```shell
-$env:HF_TOKEN = "hf_YourTokenHere"
-```
-
-**Step 4**: Run the following commands to test ReMindRAG.
-
-```shell
-cd eval
-python start_LooGLE.py --test_name "eval-long" --data_type "longdep_qa"
-python start_LooGLE.py --test_name "eval-simple" --data_type "shortdep_qa"
-python start_Hotpot.py --test_name "eval-multihop"
-```
-
-For more parameters, use the "--help" command.
-
-</details>
-
+---
 
 ## Code Structure
 <details>
@@ -220,9 +242,18 @@ For more parameters, use the "--help" command.
 │   └──  🖥️ webui
 │       ├──  📂 templates       # Webpage templates used by the web UI
 │       └──  🐍 webui.py        # Main entry code for the web UI
-├──  📜 api_key.json            # JSON file for storing API keys (optional)
 ├──  📂 eval                    # Evaluation code for ReMindRag
 ├──  📂 example                 # Example code for ReMindRag
+├──  📂 tests                   # Lab 7: Automated test suite and smoke testing
+├──  📂 artifacts               # Lab 7: Evaluation outputs and run artifacts
+├──  📂 logs                    # Lab 7: System and integration execution logs
+├──  📜 config.yaml             # Lab 7: Config-driven execution hyperparameters
+├──  📜 README.md               # Main instruction documentation
+├──  📜 RUN.md                  # Lab 7: One-command run instructions (Docker/Python)
+├──  📜 REPRO_AUDIT.md          # Lab 7: 14-issue reproducibility audit
+├──  📜 RELATED_WORK_REPRO.md   # Lab 7: Reproduction documentation
+├──  📜 Makefile                # Lab 7: Command targets (make setup, test, smoke)
+├──  📜 reproduce.sh            # Lab 7: Reproducibility bash script
 └──  ......
 
 ```
