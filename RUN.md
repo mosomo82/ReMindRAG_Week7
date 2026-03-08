@@ -77,9 +77,13 @@ python tests/test_reproducibility.py
 # Example with real API
 python example/example.py
 
-# WebUI
+# Original Flask WebUI
 python -m ReMindRag.webui.webui
 # Open http://127.0.0.1:5000
+
+# Standalone Streamlit App (New)
+streamlit run streamlit_app.py
+# Open HTTP link provided in console
 ```
 
 ---
