@@ -1,0 +1,45 @@
+# ReMindRAG Configuration File
+# All parameters are optional — CLI flags override these values.
+# Usage: python eval/eval_LooGLE.py --config config.yaml
+
+model:
+  # Embedding model (requires trust_remote_code=True)
+  embedding: "nomic-ai/nomic-embed-text-v2-moe"
+  # LLM for entity extraction, graph traversal, and answer generation
+  llm: "gpt-4o-mini"
+  # LLM for evaluation judging (can be more expensive model)
+  judge: "gpt-4o-mini"
+  # Directory to cache downloaded model weights
+  cache_dir: "./model_cache"
+
+rag:
+  # Random seed for reproducibility
+  seed: 42
+  # Max knowledge graph traversal hops per query
+  max_jumps: 3
+  # Number of initial vector search results (seeds for graph traversal)
+  search_key_nums: 5
+  # Max sub-questions to decompose a complex query into
+  max_split_question_num: 3
+  # Weight applied when reinforcing a traversed edge
+  edge_weight_coefficient: 0.1
+  # Minimum edge weight to count as a "strong" connection
+  strong_connection_threshold: 0.5
+  # Number of chunks to summarize before using the LLM summarizer
+  chunk_summary_threshold: 5
+
+eval:
+  # LooGLE dataset type: longdep_qa | longdep_summarization
+  data_type: "longdep_qa"
+  # Question type: origin | rewrite
+  question_type: "origin"
+  # Which title indices to run (0-indexed, null = all)
+  title_indices: [0]
+  # Where to write evaluation results
+  output_dir: "./artifacts/eval_results"
+
+paths:
+  api_key: "./api_key.json"
+  save_dir: "./Rag_Cache"
+  log_dir: "./logs"
+  artifacts_dir: "./artifacts"

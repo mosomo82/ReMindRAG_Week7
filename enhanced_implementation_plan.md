@@ -1,6 +1,6 @@
 # Lab 7 Enhancement Plan — ReMindRAG
 
-> **Team:** Tony Nguyen (`mosomo82`), Member A (`member-a`), Member B (`member-b`)
+> **Team:** Tony Nguyen (`mosomo82`), Daniel Evans (`devans2718`), Joel Vinas (`joelvinas`) 
 > **Repository:** `kilgrims/ReMindRAG`
 > **Base Branch:** `main`
 
@@ -44,7 +44,7 @@
 
 ### 0.1 — Clone & Branch
 ```bash
-git clone https://github.com/kilgrims/ReMindRAG.git
+git clone https://github.com/mosomo82/ReMindRAG.git
 cd ReMindRAG
 git checkout main && git pull origin main
 

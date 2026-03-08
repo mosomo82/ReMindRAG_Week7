@@ -1,0 +1,6 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-03-08T10:11:36.829790Z",
+  "exit_code": 0,
+  "script": "repro_test.py"
+}
