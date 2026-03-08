@@ -16,11 +16,12 @@ all: smoke
 ## help: Show this help message
 help:
 	@echo "ReMindRAG — Available Makefile targets:"
-	@echo "  make setup   Create venv and install all dependencies"
-	@echo "  make smoke   Run the quick smoke test (no API key needed)"
-	@echo "  make test    Run the full 17-test reproducibility suite"
-	@echo "  make docker  Build Docker image and run smoke test"
-	@echo "  make clean   Remove generated cache files and artifacts"
+	@echo "  make setup      Create venv and install all dependencies"
+	@echo "  make smoke      Run the quick smoke test (no API key needed)"
+	@echo "  make test       Run the full 17-test reproducibility suite"
+	@echo "  make streamlit  Run the standalone Streamlit WebUI"
+	@echo "  make docker     Build Docker image and run smoke test"
+	@echo "  make clean      Remove generated cache files and artifacts"
 
 ## setup: Create virtual environment and install pinned dependencies
 setup:
@@ -41,6 +42,10 @@ smoke:
 ## test: Run the full 17-test reproducibility audit suite
 test:
 	$(PYTHON) tests/test_reproducibility.py -v
+
+## streamlit: Run the standalone Streamlit WebUI
+streamlit:
+	$(VENV_DIR)/Scripts/streamlit run streamlit_app.py
 
 ## docker: Build Docker image and run the in-container smoke test
 docker:

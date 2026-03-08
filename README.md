@@ -33,9 +33,10 @@ python tests/smoke_test.py
 
 ### Option C: Makefile
 ```shell
-make setup   # Install dependencies
-make smoke   # Run smoke test
-make test    # Run full 17-test audit suite
+make setup       # Install dependencies
+make smoke       # Run smoke test
+make test        # Run full 17-test audit suite
+make streamlit   # Run the standalone Streamlit interface
 ```
 
 > See [RUN.md](./RUN.md) for complete run instructions including evaluation scripts and WebUI.
@@ -217,45 +218,33 @@ Subclass `ChunkerBase` in `ReMindRag/chunking/base.py` for custom chunking.
 <summary>Code Structure</summary>
 
 ```
-📂 ReMindRag
-├──  📂 ReMindRag
-│   ├──  🐍 rag_main.py         # Main entry file for ReMindRag
-│   ├──  🧩 chunking
-│   │   ├──  🐍 base.py         # All text chunking methods must inherit from the class in this file
-│   │   └──  ...... 
-│   ├──  🤖 llms
-│   │   ├──  🐍 base.py         # All large language model interfaces must inherit from the class in this file
-│   │   └──  ...... 
-│   ├──  📝 embeddings
-│   │   ├──  🐍 base.py         # All embedding methods must inherit from the class in this file
-│   │   └──  ...... 
-│   ├──  🗃️ database
-│   │   ├──  🐍 chromaDB.py     # Database operations based on ChromaDB
-│   │   ├──  🐍 data_extract.py # Code for extracting named entities and relationships
-│   │   └──  🐍 prompts.py      # Prompts used for extracting named entities and relationships
-│   ├──  🛠️ generator
-│   │   ├──  🐍 preprocess.py   # Query preprocessing related code
-│   │   ├──  🐍 pathfinder.py   # Core code for LLM-Guided Traversal
-│   │   └──  🐍 prompts.py      # Prompts used in LLM-Guided Traversal
-│   ├──  🕸️ kg                  # Knowledge graph visualization related code
-│   ├──  🧰 utils               # Utility components used in the project
-│   └──  🖥️ webui
-│       ├──  📂 templates       # Webpage templates used by the web UI
-│       └──  🐍 webui.py        # Main entry code for the web UI
-├──  📂 eval                    # Evaluation code for ReMindRag
-├──  📂 example                 # Example code for ReMindRag
-├──  📂 tests                   # Lab 7: Automated test suite and smoke testing
-├──  📂 artifacts               # Lab 7: Evaluation outputs and run artifacts
-├──  📂 logs                    # Lab 7: System and integration execution logs
-├──  📜 config.yaml             # Lab 7: Config-driven execution hyperparameters
-├──  📜 README.md               # Main instruction documentation
-├──  📜 RUN.md                  # Lab 7: One-command run instructions (Docker/Python)
-├──  📜 REPRO_AUDIT.md          # Lab 7: 14-issue reproducibility audit
-├──  📜 RELATED_WORK_REPRO.md   # Lab 7: Reproduction documentation
-├──  📜 Makefile                # Lab 7: Command targets (make setup, test, smoke)
-├──  📜 reproduce.sh            # Lab 7: Reproducibility bash script
-└──  ......
-
+ReMindRAG/
+├── ReMindRag/                    # Core library
+│   ├── rag_main.py               # Main entry point
+│   ├── chunking/                 # Text chunking strategies
+│   ├── llms/                     # LLM agent interfaces
+│   ├── embeddings/               # Embedding model interfaces
+│   ├── database/                 # ChromaDB + entity extraction
+│   ├── generator/                # Query preprocessing + KG traversal
+│   ├── kg/                       # Knowledge graph visualization
+│   ├── utils/                    # Utility components
+│   └── webui/                    # Flask WebUI
+├── eval/                         # Evaluation scripts (LooGLE, HotpotQA)
+├── example/                      # Demo script + example data
+├── tests/
+│   ├── smoke_test.py             # Quick smoke test (no API key needed)
+│   └── test_reproducibility.py  # 17-test audit suite
+├── artifacts/
+│   └── smoke_test_result.json   # Smoke test output artifact
+├── logs/                         # Runtime logs
+├── Dockerfile                    # Reproducible container build
+├── .dockerignore                 # Excludes stale cache from image
+├── config.yaml                   # Config-driven execution
+├── reproduce.sh                  # Cross-platform automation script
+├── Makefile                      # Convenience targets
+├── requirements.txt              # Pinned dependencies (146 packages)
+├── environment.yml               # Conda environment spec
+├── RUN.md                        # Complete run instructions
+├── REPRO_AUDIT.md                # 14-issue reproducibility audit
+└── RELATED_WORK_REPRO.md         # Related work reproduction report
 ```
-
-</details>
