@@ -1,6 +1,6 @@
 [
     {
         "base_url": "https://api.openai.com/v1",
-        "api_key": "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"
+        "api_key": "YOUR_API_KEY_HERE"
     }
 ]
