@@ -260,6 +260,9 @@ class ChromaDBManager:
 
 
     def query_similar_entity(self, entity):
+        if self.entity_collection.count() == 0:
+            return None
+            
         entity_embedding = self.embedding.sentence_embedding(entity)
         
         results = self.entity_collection.query(

@@ -1,5 +1,8 @@
 import sys
-sys.path.append('../')
+import os
+EVAL_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(EVAL_DIR)
+sys.path.insert(0, REPO_ROOT)
 
 from datasets import load_dataset
 from ReMindRag.llms import OpenaiAgent
@@ -24,12 +27,14 @@ def main():
     parser.add_argument('--test_name', type=str, default="test", help='Test Name')
     parser.add_argument('--question_type', type=str, choices=["origin", "similar", "different"], help='Question Type: origin, similar or different')
     parser.add_argument('--model_name', type=str, default="gpt-4o-mini", help='Backbone Model Name')
+    parser.add_argument('--judge_model_name', type=str, default="gpt-4o-2024-11-20", help='Model for answer rewrite/check judge agents')
     args = parser.parse_args()
 
     title_index = args.title_index
     test_name = args.test_name
     model_name = args.model_name
     query_type = args.question_type
+    judge_model_name = args.judge_model_name
 
     right_num = 0
     total_num = 0
@@ -63,12 +68,12 @@ Answer:
 """
 
 
-    with open('../api_key.json', 'r', encoding='utf-8') as file:
+    with open(os.path.join(REPO_ROOT, 'api_key.json'), 'r', encoding='utf-8') as file:
         api_data = json.load(file)
 
     base_url = api_data[0]["base_url"]
     api_key = api_data[0]["api_key"]
-    model_cache = "../model_cache"
+    model_cache = os.path.join(REPO_ROOT, "model_cache")
 
     chunk_agent = OpenaiAgent(base_url, api_key, model_name)
     kg_agent = OpenaiAgent(base_url, api_key, model_name)
@@ -76,23 +81,26 @@ Answer:
 
     embedding = HgEmbedding("nomic-ai/nomic-embed-text-v2-moe", model_cache)
     chunker = NaiveChunker("nomic-ai/nomic-embed-text-v2-moe", model_cache, max_token_length=750, context_sentence=0)
-    tokenizer = AutoTokenizer.from_pretrained("nomic-ai/nomic-embed-text-v2-moe",cache_dir = model_cache)
+    tokenizer = AutoTokenizer.from_pretrained("nomic-ai/nomic-embed-text-v2-moe", cache_dir=model_cache)
 
-    ans_rewrite_agent = OpenaiAgent(base_url, api_key, "gpt-4o-2024-11-20")
-    ans_check_agent = OpenaiAgent(base_url, api_key, "gpt-4o-2024-11-20")
+    ans_rewrite_agent = OpenaiAgent(base_url, api_key, judge_model_name)
+    ans_check_agent = OpenaiAgent(base_url, api_key, judge_model_name)
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_path = f"./database/{test_name}/{{title}}/log_{timestamp}.log"
+    db_base = os.path.join(EVAL_DIR, "database", test_name)
+    log_path = os.path.join(db_base, "{title}", f"log_{timestamp}.log")
+
+    dataset_cache = os.path.join(EVAL_DIR, "dataset_cache", "Hotpot")
 
 
 
 
 
-    with open(f"./dataset_cache/Hotpot/{dataset_name}", "r", encoding="utf-8") as f:
+    with open(os.path.join(dataset_cache, dataset_name), "r", encoding="utf-8") as f:
         all_data = json.load(f)
-    with open(f"./dataset_cache/Hotpot/hotpot_dev_distractor_similar.json", "r", encoding="utf-8") as f:
+    with open(os.path.join(dataset_cache, "hotpot_dev_distractor_similar.json"), "r", encoding="utf-8") as f:
         similar_data = json.load(f)
-    with open(f"./dataset_cache/Hotpot/hotpot_dev_distractor_different.json", "r", encoding="utf-8") as f:
+    with open(os.path.join(dataset_cache, "hotpot_dev_distractor_different.json"), "r", encoding="utf-8") as f:
         different_data = json.load(f)
 
     if query_type=="origin":
@@ -111,11 +119,11 @@ Answer:
 
 
 
-    need_load_data = os.path.exists(f"database/{test_name}/{title_index}")
+    need_load_data = os.path.exists(os.path.join(EVAL_DIR, "database", test_name, str(title_index)))
     
     if not need_load_data:
-        os.makedirs(f"database/{test_name}", exist_ok=True)
-        os.makedirs(f"database/{test_name}/{title_index}", exist_ok=True)
+        os.makedirs(os.path.join(EVAL_DIR, "database", test_name), exist_ok=True)
+        os.makedirs(os.path.join(EVAL_DIR, "database", test_name, str(title_index)), exist_ok=True)
 
     rag = ReMindRag(
         logger_level = 10,
@@ -127,7 +135,7 @@ Answer:
         chunker = chunker,
         tokenizer = tokenizer,
         database_description = f"Database title: wiki",
-        save_dir=f"database/{test_name}/{title_index}",
+        save_dir=os.path.join(EVAL_DIR, "database", test_name, str(title_index)),
         edge_weight_coefficient=0.1,
         strong_connection_threshold=0.5
         
@@ -174,7 +182,8 @@ Answer:
         print(f"Ans Check Output Error: {ans_check_response}")
 
 
-    with open(f"database/{test_name}/{title_index}/input.json", "w", encoding="utf-8") as f:
+    result_path = os.path.join(EVAL_DIR, "database", test_name, str(title_index), "input.json")
+    with open(result_path, "w", encoding="utf-8") as f:
         json.dump(all_inputs, f, ensure_ascii=False, indent=4)
     
 

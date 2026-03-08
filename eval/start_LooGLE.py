@@ -5,13 +5,14 @@ import time
 from datetime import datetime
 import json
 
-def run_title_test(title_index, test_name, data_type, question_type, model_name):
+def run_title_test(title_index, test_name, data_type, question_type, model_name, judge_model_name):
     cmd = [ "python", "eval_LooGLE.py", 
             "--title_index", str(title_index), 
             "--test_name", test_name,
             "--data_type", data_type,
             "--question_type", question_type,
-            "--model_name", model_name
+            "--model_name", model_name,
+            "--judge_model_name", judge_model_name
         ]
     
     print(f"Run Command: {' '.join(cmd)}")
@@ -28,6 +29,7 @@ def main():
     parser.add_argument('--data_type', type=str, choices=["longdep_qa", "shortdep_qa"], help='Data Type: longdep_qa or shortdep_qa')
     parser.add_argument('--question_type', type=str, default="origin", choices=["origin", "similar"], help='Question Type: origin or similar')
     parser.add_argument('--model_name', type=str, default="gpt-4o-mini", help='Backbone Model Name')
+    parser.add_argument('--judge_model_name', type=str, default="gpt-4o", help='Model for answer rewrite/check judge agents')
     
     args = parser.parse_args()
     
@@ -38,6 +40,7 @@ def main():
     data_type = args.data_type
     question_type = args.question_type
     model_name = args.model_name
+    judge_model_name = args.judge_model_name
 
     if parallel < 1:
         parallel = 1
@@ -67,7 +70,13 @@ def main():
     
     while current_index < end_index or active_processes:
         while current_index < end_index and len(active_processes) < parallel:
-            process = run_title_test(current_index, test_name, data_type, question_type, model_name)
+            # Resume guard: skip already-completed tests (matching start_Hotpot.py behaviour)
+            result_path = os.path.join("database", test_name, str(current_index), "input.json")
+            if os.path.exists(result_path):
+                print(f"Title index {current_index} already completed, skipping...")
+                current_index += 1
+                continue
+            process = run_title_test(current_index, test_name, data_type, question_type, model_name, judge_model_name)
             active_processes.append((process, current_index))
             print(f"Started test for title index {current_index}, PID: {process.pid}")
             current_index += 1

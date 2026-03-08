@@ -3,11 +3,17 @@ from sentence_transformers import SentenceTransformer
 
 
 class HgEmbedding(EmbeddingBase):
-    def __init__(self, model_name, cache_dir):
+    def __init__(self, model_name, cache_dir, device=None):
         self.model_name = model_name
         self.cache_dir = cache_dir
         
-        self.model = SentenceTransformer(model_name_or_path=model_name, cache_folder=cache_dir, trust_remote_code=True)
+        import torch
+        if device is None:
+            self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        else:
+            self.device = device
+            
+        self.model = SentenceTransformer(model_name_or_path=model_name, cache_folder=cache_dir, trust_remote_code=True, device=self.device)
 
     def sentence_embedding(self, sentence):
         embedding = self.model.encode([sentence])

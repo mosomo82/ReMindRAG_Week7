@@ -1,0 +1,25 @@
+# Runtime data that must NOT be baked into the image
+# (ChromaDB files from host runs will cause version-mismatch crashes)
+Rag_Cache/
+repro_model_cache/
+model_cache/
+eval/database/
+eval/dataset_cache/
+logs/
+
+# Python artifacts
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDE / OS files
+.venv/
+.env
+*.DS_Store
+.git/

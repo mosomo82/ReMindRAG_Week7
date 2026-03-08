@@ -17,8 +17,12 @@ Use this command to initialize this Repo's environment.
 ```shell
     conda create -n ReMindRag python==3.13.2
     conda activate ReMindRag
-    pip install -r requirements.txt
+    pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu126
 ```
+
+> **Note:** The `--extra-index-url` flag is required because the PyTorch CUDA 12.6 wheels (`torch==2.6.0+cu126`) are hosted on PyTorch's own server, not PyPI. Omitting this flag will cause a "package not found" error. For a CPU-only install, replace the CUDA wheel suffixes with `+cpu` or remove them entirely.
+
+> **Note:** The embedding model (`nomic-ai/nomic-embed-text-v2-moe`) requires `trust_remote_code=True` when loading. This is set automatically inside the library but newer versions of `transformers` may prompt interactively in some environments. Set the environment variable `TRUST_REMOTE_CODE=1` or ensure you are not running in a fully non-interactive shell if you encounter a hang.
 
 ## Quick Start
 
@@ -37,11 +41,17 @@ Replace with your OpenAI API key by filling in the `api_key.json` file:
 
 Download the HuggingFace model [nomic-ai/nomic-embed-text-v2-moe](https://huggingface.co/nomic-ai/nomic-embed-text-v2-moe) and place it in the `./model_cache` directory.
 
-Load your HuggingFace token:
+Load your HuggingFace token (persistent via CLI — recommended):
 
 ```shell
+# Persistent login (stored in ~/.cache/huggingface/token)
+huggingface-cli login
+
+# OR set for the current shell session only (not persisted across terminals)
 $env:HF_TOKEN = "hf_YourTokenHere"
 ```
+
+> For CI/CD environments, set `HF_TOKEN` as a secret environment variable in your pipeline.
 
 
 
@@ -147,7 +157,16 @@ If you want to implement a different chunking strategy, please subclass the **Ch
 <details>
 <summary>Code & Steps</summary>
 
-**Step 1**: Download the LooGLE dataset and our modified dataset, then place them in `eval/database`. (Our modified dataset is available for download at [here](https://drive.google.com/file/d/1gv7rfiuMEVNMABttp6SZLzSJR-sZNfU5/view?usp=sharing).)
+**Step 1**: Download the LooGLE dataset and our modified preprocessed dataset, then place them in the correct locations:
+
+- **Raw LooGLE**: Automatically downloaded from HuggingFace (`bigai-nlco/LooGLE`) into `eval/dataset_cache/` on first run.
+- **Preprocessed files** (required for evaluation): Download our modified dataset from [Google Drive](https://drive.google.com/file/d/1gv7rfiuMEVNMABttp6SZLzSJR-sZNfU5/view?usp=sharing) and extract it so the directory structure looks like:
+  ```
+  eval/dataset_cache/LooGLE-rewrite-data/
+  ├── titles.json
+  ├── choice-format/{data_type}/{title}.json   # cleaned question/answer pairs
+  └── similar-data/{data_type}/{title}.json    # paraphrased questions
+  ```
 
 **Step 2**: Download the HuggingFace model [nomic-ai/nomic-embed-text-v2-moe](https://huggingface.co/nomic-ai/nomic-embed-text-v2-moe) and place it in the `./model_cache` directory.
 

@@ -1,5 +1,8 @@
 import sys
-sys.path.append('../')
+import os
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(SCRIPT_DIR)
+sys.path.append(REPO_ROOT)
 
 from ReMindRag.llms import OpenaiAgent
 from ReMindRag.embeddings import HgEmbedding
@@ -12,15 +15,17 @@ from datetime import datetime
 from transformers import AutoTokenizer
 
 # Step 1: Get Basic Information
-with open('../api_key.json', 'r', encoding='utf-8') as file:
+with open(os.path.join(REPO_ROOT, 'api_key.json'), 'r', encoding='utf-8') as file:
     api_data = json.load(file)
 
 base_url = api_data[0]["base_url"]
 api_key = api_data[0]["api_key"]
-model_cache_dir = "../model_cache"
+model_cache_dir = os.path.join(REPO_ROOT, "model_cache")
 
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-log_path = f"logs/log_{timestamp}.log"
+logs_dir = os.path.join(SCRIPT_DIR, "logs")
+os.makedirs(logs_dir, exist_ok=True)
+log_path = os.path.join(logs_dir, f"log_{timestamp}.log")
 
 
 # Step 2: Load Base Components
@@ -46,7 +51,7 @@ rag_instance = ReMindRag(
     )
 
 # Step 4: Load Content
-rag_instance.load_file("./example_data.txt",language="zh")
+rag_instance.load_file(os.path.join(SCRIPT_DIR, "example_data.txt"), language="zh")
 
 # Step 5: Ask A Question
 query = "What does a level 20 paladin gain?"

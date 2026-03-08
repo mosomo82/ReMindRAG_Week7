@@ -9,6 +9,7 @@ from .utils.logger import setup_logger, trace
 from typing import List,Dict
 from transformers import AutoTokenizer
 import logging
+import os
 
 
 class ReMindRag:
@@ -40,8 +41,12 @@ class ReMindRag:
         self.logger.info("Start Initail ReMindRag.")
 
         self.save_dir = save_dir
-        self.database_pth  = save_dir + "/chroma_data"
-        self.model_cache = save_dir + "/model_cache"
+        self.database_pth = os.path.join(save_dir, "chroma_data")
+        self.model_cache = os.path.join(save_dir, "model_cache")
+
+        # Ensure required directories exist
+        os.makedirs(self.database_pth, exist_ok=True)
+        os.makedirs(self.model_cache, exist_ok=True)
 
         self.chunk_agent = chunk_agent
         self.kg_agent = kg_agent
@@ -73,7 +78,7 @@ class ReMindRag:
             agent=generate_agent, 
             kg_agent=kg_agent,
             database=self.database, 
-            daatabase_description=database_description,
+            database_description=database_description,
             chunk_summary_threshold = chunk_summary_threshold,
             logger_level=logger_level,
             save_dir = save_dir,

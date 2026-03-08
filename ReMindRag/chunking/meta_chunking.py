@@ -9,12 +9,18 @@ class MetaChunker(ChunkerBase):
         """
         Initialize the Chunking class.
         :param model_name_or_path: Path or name of the pre-trained model
-        :param device: Device type ('cpu' or 'cuda')
+        :param device: Device type ('cpu' or 'cuda' or 'auto')
         :param threshold: Threshold to determine minima points
         """
+        import torch
+        if device == 'auto':
+            device_map = "auto" if torch.cuda.is_available() else "cpu"
+        else:
+            device_map = device
+
         # Load the model and tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir = model_cache_dir, trust_remote_code=True)
-        self.model = AutoModelForCausalLM.from_pretrained(model_name_or_path, cache_dir = model_cache_dir, trust_remote_code=True, device_map=device)
+        self.model = AutoModelForCausalLM.from_pretrained(model_name_or_path, cache_dir = model_cache_dir, trust_remote_code=True, device_map=device_map)
         self.model.eval()
         self.threshold =threshold
         self.re_chunk_times = re_chunk_times

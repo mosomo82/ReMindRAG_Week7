@@ -13,10 +13,10 @@ import os
 import concurrent.futures
 
 class PreProcessing():
-    def __init__(self, agent:AgentBase, kg_agent:AgentBase, database:ChromaDBManager, daatabase_description:str, chunk_summary_threshold, logger_level, save_dir, log_path):
+    def __init__(self, agent:AgentBase, kg_agent:AgentBase, database:ChromaDBManager, database_description:str, chunk_summary_threshold, logger_level, save_dir, log_path):
         self.agent = agent
         self.database = database
-        self.database_description = daatabase_description
+        self.database_description = database_description
         self.max_retries = 3
         self.path_finder = PathFinder(kg_agent, database, chunk_summary_threshold, logger_level, log_path)
         self.save_dir = save_dir

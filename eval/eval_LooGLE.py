@@ -1,5 +1,8 @@
 import sys
-sys.path.append('../')
+import os
+EVAL_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(EVAL_DIR)
+sys.path.insert(0, REPO_ROOT)
 
 from datasets import load_dataset
 from ReMindRag.llms import OpenaiAgent
@@ -9,11 +12,22 @@ from ReMindRag import ReMindRag
 
 import json
 import torch
+import random
+import numpy as np
 from datetime import datetime
 import logging
 import os
 import argparse
 from transformers import AutoTokenizer
+
+def set_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
 def main():
@@ -23,6 +37,8 @@ def main():
     parser.add_argument('--data_type', type=str, choices=["longdep_qa", "shortdep_qa"], help='Data Type: longdep_qa or shortdep_qa')
     parser.add_argument('--question_type', type=str, choices=["origin", "similar"], help='Question Type: origin or similar')
     parser.add_argument('--model_name', type=str, default="gpt-4o-mini", help='Backbone Model Name')
+    parser.add_argument('--judge_model_name', type=str, default="gpt-4o", help='Model name for answer rewrite/check judge agents')
+    parser.add_argument('--seed', type=int, default=42, help='Random seed for deterministic evaluation')
     args = parser.parse_args()
 
     title_index = args.title_index
@@ -30,6 +46,9 @@ def main():
     type = args.data_type
     model_name = args.model_name
     question_type = args.question_type
+    judge_model_name = args.judge_model_name
+    
+    set_seed(args.seed)
 
     right_num = 0
     total_num = 0
@@ -64,13 +83,13 @@ Original answer = {generated_answer}
 
     print(f"cuda: {torch.cuda.is_available()}")
 
-    with open('../api_key.json', 'r', encoding='utf-8') as file:
+    with open(os.path.join(REPO_ROOT, 'api_key.json'), 'r', encoding='utf-8') as file:
         api_data = json.load(file)
 
     base_url = api_data[0]["base_url"]
     api_key = api_data[0]["api_key"]
 
-    model_cache = "../model_cache"
+    model_cache = os.path.join(REPO_ROOT, "model_cache")
 
     chunk_agent = OpenaiAgent(base_url, api_key, model_name)
     kg_agent = OpenaiAgent(base_url, api_key, model_name)
@@ -78,18 +97,21 @@ Original answer = {generated_answer}
 
     embedding = HgEmbedding("nomic-ai/nomic-embed-text-v2-moe", model_cache)
     chunker = NaiveChunker("nomic-ai/nomic-embed-text-v2-moe", model_cache, max_token_length=750)
-    tokenizer = AutoTokenizer.from_pretrained("nomic-ai/nomic-embed-text-v2-moe",cache_dir = model_cache)
+    tokenizer = AutoTokenizer.from_pretrained("nomic-ai/nomic-embed-text-v2-moe", cache_dir=model_cache)
 
-    ans_rewrite_agent = OpenaiAgent(base_url, api_key, "gpt-4o")
-    ans_check_agent = OpenaiAgent(base_url, api_key, "gpt-4o")
+    ans_rewrite_agent = OpenaiAgent(base_url, api_key, judge_model_name)
+    ans_check_agent = OpenaiAgent(base_url, api_key, judge_model_name)
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_path = f"./database/{test_name}/{{title}}/log_{timestamp}.log"
+    db_base = os.path.join(EVAL_DIR, "database", test_name)
+    log_path = os.path.join(db_base, "{title}", f"log_{timestamp}.log")
 
-    ds = load_dataset("bigai-nlco/LooGLE", type, split='test', cache_dir="./dataset_cache") 
+    dataset_cache = os.path.join(EVAL_DIR, "dataset_cache")
+    ds = load_dataset("bigai-nlco/LooGLE", type, split='test', cache_dir=dataset_cache) 
 
     all_titles = []
-    with open("./dataset_cache/LooGLE-rewrite-data/titles.json","r",encoding='utf-8') as f:
+    titles_json = os.path.join(dataset_cache, "LooGLE-rewrite-data", "titles.json")
+    with open(titles_json, "r", encoding='utf-8') as f:
         title_data = json.load(f)
 
     for title_iter in title_data.values():
@@ -106,17 +128,17 @@ Original answer = {generated_answer}
     filtered_data = ds.filter(lambda example: example["title"] == title)
     context = filtered_data[0]["context"]
 
-    with open(f"./dataset_cache/LooGLE-rewrite-data/choice-format/{type}/{title}.json", "r", encoding="utf-8") as f:
+    with open(os.path.join(dataset_cache, "LooGLE-rewrite-data", "choice-format", type, f"{title}.json"), "r", encoding="utf-8") as f:
         cleaned_data = json.load(f)
 
-    with open(f"./dataset_cache/LooGLE-rewrite-data/similar-data/{type}/{title}.json", "r", encoding="utf-8") as f:
+    with open(os.path.join(dataset_cache, "LooGLE-rewrite-data", "similar-data", type, f"{title}.json"), "r", encoding="utf-8") as f:
         rewrite_data = json.load(f)
     
-    need_load_data = os.path.exists(f"database/{test_name}/{title_index}")
+    need_load_data = os.path.exists(os.path.join(EVAL_DIR, "database", test_name, str(title_index)))
     
     if not need_load_data:
-        os.makedirs(f"database/{test_name}", exist_ok=True)
-        os.makedirs(f"database/{test_name}/{title_index}", exist_ok=True)
+        os.makedirs(os.path.join(EVAL_DIR, "database", test_name), exist_ok=True)
+        os.makedirs(os.path.join(EVAL_DIR, "database", test_name, str(title_index)), exist_ok=True)
 
     rag = ReMindRag(
         logger_level = 10,
@@ -128,7 +150,7 @@ Original answer = {generated_answer}
         chunker = chunker,
         tokenizer = tokenizer,
         database_description = f"Database title: {title}.",
-        save_dir = f"database/{test_name}/{title_index}",
+        save_dir = os.path.join(EVAL_DIR, "database", test_name, str(title_index)),
         edge_weight_coefficient = 0.1,
         strong_connection_threshold = 0.5
     )

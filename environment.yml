@@ -1,0 +1,9 @@
+name: ReMindRag
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.13.2
+  - pip
+  - pip:
+    - -r requirements.txt

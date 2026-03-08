@@ -7,6 +7,8 @@ from ..rag_main import ReMindRag
 def launch_webui(rag_instance:ReMindRag, host='127.0.0.1', port=5000, debug=True):
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    temp_dir = os.path.join(BASE_DIR, "temp")
+    os.makedirs(temp_dir, exist_ok=True)
 
     app = Flask(__name__)
     
