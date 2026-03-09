@@ -63,5 +63,8 @@ ENV HF_HOME=/app/model_cache \
     TRANSFORMERS_CACHE=/app/model_cache \
     PYTHONUNBUFFERED=1
 
-# Default entrypoint: run the reproduction smoke test (overridable)
-CMD ["python", "repro_test.py"]
+# Expose Streamlit port
+EXPOSE 8501
+
+# Default entrypoint: run the Streamlit UI
+CMD ["python", "-m", "streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
