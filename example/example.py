@@ -31,9 +31,10 @@ log_path = os.path.join(logs_dir, f"log_{timestamp}.log")
 # Step 2: Load Base Components
 chunk_agent = OpenaiAgent(base_url, api_key, "gpt-4o-mini")
 generate_agent = OpenaiAgent(base_url, api_key, "gpt-4o-mini")
-embedding = HgEmbedding("nomic-ai/nomic-embed-text-v2-moe", model_cache_dir)
-chunker = NaiveChunker("nomic-ai/nomic-embed-text-v2-moe", model_cache_dir, max_token_length=750)
-tokenizer = AutoTokenizer.from_pretrained("nomic-ai/nomic-embed-text-v2-moe", cache_dir = model_cache_dir)
+embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
+embedding = HgEmbedding(embedding_model, model_cache_dir)
+chunker = NaiveChunker(embedding_model, model_cache_dir, max_token_length=200)
+tokenizer = AutoTokenizer.from_pretrained(embedding_model, cache_dir = model_cache_dir)
 
 
 
