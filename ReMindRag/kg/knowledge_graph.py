@@ -61,20 +61,12 @@ class KnowledgeGraph:
                 if attr['type'] == 'entity':
                     temp_graph.nodes[node_id]['size'] = 25
                     if node_id.startswith("anchor-"):
-                        id_int = int(node_id.split("-")[-1])
                         temp_graph.nodes[node_id]['color'] = '#D98A12'
-                        temp_graph.nodes[node_id]['x'] = chunk_x + (id_int-1) * chunk_x_step
-                        temp_graph.nodes[node_id]['y'] = -300
-                        temp_graph.nodes[node_id]['fixed'] = True
                     else:
                         temp_graph.nodes[node_id]['color'] = '#4CAF50'
                 elif attr['type'] == 'chunk':
                     temp_graph.nodes[node_id]['size'] = 20
                     temp_graph.nodes[node_id]['color'] = '#2196F3'
-                    id_int = int(node_id)
-                    temp_graph.nodes[node_id]['x'] = chunk_x + (id_int-1) * chunk_x_step
-                    temp_graph.nodes[node_id]['y'] = -500
-                    temp_graph.nodes[node_id]['fixed'] = True
                 else:
                     temp_graph.nodes[node_id]['size'] = 15
         
@@ -200,11 +192,7 @@ class KnowledgeGraph:
                         opacity = 1.0
                     
                     if node_id.startswith("anchor-"):
-                        id_int = int(node_id.split("-")[-1])
                         base_color = '#D98A12'
-                        temp_graph.nodes[node_id]['x'] = chunk_x + (id_int-1) * chunk_x_step
-                        temp_graph.nodes[node_id]['y'] = -300
-                        temp_graph.nodes[node_id]['fixed'] = True
                     else:
                         base_color = '#4CAF50'
                     
@@ -222,11 +210,6 @@ class KnowledgeGraph:
                     base_color = '#2196F3'
                     r, g, b = int(base_color[1:3], 16), int(base_color[3:5], 16), int(base_color[5:7], 16)
                     temp_graph.nodes[node_id]['color'] = f'rgba({r}, {g}, {b}, {opacity})'
-                    
-                    id_int = int(node_id)
-                    temp_graph.nodes[node_id]['x'] = chunk_x + (id_int-1) * chunk_x_step
-                    temp_graph.nodes[node_id]['y'] = -500
-                    temp_graph.nodes[node_id]['fixed'] = True
                 else:
                     temp_graph.nodes[node_id]['size'] = 15
         
