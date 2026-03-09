@@ -169,14 +169,15 @@ else:
             
         # Agent response
         with st.chat_message("assistant"):
-            with st.spinner("Traversing Knowledge Graph..."):
+            with st.status("Traversing Knowledge Graph...", expanded=True) as status:
                 try:
+                    st.write("Searching database and prompting LLM routing agents...")
                     response, chunks, edges = st.session_state.rag_instance.generate_response(query, force_do_rag=True)
                     
-                    st.write(response)
-                    
+                    st.write("Synthesizing final answer...")
                     chunks_count = sum(len(c) for c in chunks) if isinstance(chunks, list) else (len(chunks) if chunks else 0)
                     
+                    st.write("Rendering Knowledge Graph...")
                     st.session_state.rag_instance.refresh_kg()
                     graph_html_str = ""
                     try:
@@ -200,18 +201,25 @@ else:
                     if graph_html_str:
                         meta["graph_html"] = graph_html_str
 
-                    with st.expander("Show Retrieval Details"):
-                        # Extract non-HTML metadata for display
-                        display_meta = {k: v for k, v in meta.items() if k != "graph_html"}
-                        st.json(display_meta)
-                        if graph_html_str:
-                            st.subheader("Knowledge Graph Traversal")
-                            components.html(graph_html_str, height=800, scrolling=True)
-                        
-                    st.session_state.chat_history.append({
-                        "role": "assistant", 
-                        "content": response,
-                        "metadata": meta
-                    })
+                    status.update(label="Query complete!", state="complete", expanded=False)
                 except Exception as e:
+                    status.update(label="Error processing query", state="error", expanded=False)
                     st.error(f"Error generating response: {str(e)}")
+                    response = "Sorry, an error occurred during generation."
+                    meta = {}
+
+            if response != "Sorry, an error occurred during generation.":
+                st.write(response)
+                with st.expander("Show Retrieval Details"):
+                    # Extract non-HTML metadata for display
+                    display_meta = {k: v for k, v in meta.items() if k != "graph_html"}
+                    st.json(display_meta)
+                    if meta.get("graph_html"):
+                        st.subheader("Knowledge Graph Traversal")
+                        components.html(meta["graph_html"], height=800, scrolling=True)
+                    
+                st.session_state.chat_history.append({
+                    "role": "assistant", 
+                    "content": response,
+                    "metadata": meta
+                })
