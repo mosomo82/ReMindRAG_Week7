@@ -54,18 +54,20 @@ make streamlit   # Run the standalone Streamlit interface
 | [Makefile](./Makefile) | Convenience targets: setup, smoke, test, docker, clean |
 | [config.yaml](./config.yaml) | Config-driven execution — all hyperparameters in one place |
 | [tests/smoke_test.py](./tests/smoke_test.py) | Smoke test — exits 0 on success, writes JSON artifact |
-| [tests/test_reproducibility.py](./tests/test_reproducibility.py) | 17-test audit suite covering all 14 reproducibility fixes |
+| [tests/test_reproducibility.py](./tests/test_reproducibility.py) | 17-test audit suite covering reproducibility fixes |
+| [streamlit_app.py](./streamlit_app.py) | Standalone interactive UI showcasing real-time agentic graph traversal |
 | [artifacts/smoke_test_result.json](./artifacts/smoke_test_result.json) | Sample output artifact |
 
 ---
 
-## Reproducibility Fixes (14 Issues Resolved)
+## Reproducibility Fixes (20 Issues Resolved)
 
 | Severity | Issues Fixed |
 |----------|-------------|
-| CRITICAL | Missing directory creation (`model_cache/`, `chroma_data/`, `logs/`, `temp/`), UTF-16 encoded requirements file, missing CUDA wheel index URL |
-| HIGH | Hardcoded judge model, missing eval resume guard, `daatabase_description` typo, undocumented HuggingFace auth |
+| CRITICAL | Missing dir creation (`model_cache/`, `chroma_data/`), UTF-16 requirements, missing CUDA wheel index, **8 missing package dependencies including `flask`, `streamlit`, `openai`** |
+| HIGH | Hardcoded judge model, missing eval resume guard, `daatabase_description` typo, undocumented HuggingFace auth, **gated embedding model `nomic-ai` crashing pipelines, vector dimension (768 vs 384) mismatch** |
 | MEDIUM | Windows path separators → `os.path.join`, CWD-relative imports → `__file__`-relative, missing `--seed` arg |
+| UI/UX | **Built new standalone Streamlit app, fixed original WebUI launch command, fixed PyVis graph clipping, restored PyVis circular force physics by removing rigid `[x,y]` coordinates.** |
 
 All fixes verified by automated test suite: **17/17 PASS**.
 
