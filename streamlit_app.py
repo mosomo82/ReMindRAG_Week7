@@ -185,6 +185,10 @@ else:
                         st.session_state.rag_instance.kg.save_as_pyvis_for_quick_query(tmp_html_path, query)
                         with open(tmp_html_path, "r", encoding="utf-8") as f:
                             graph_html_str = f.read()
+                            
+                        # Adjust PyVis hardcoded 1200px height for Streamlit viewing
+                        graph_html_str = graph_html_str.replace('1200px', '800px')
+                        
                         os.unlink(tmp_html_path)
                     except Exception as e:
                         logging.error(f"Failed to generate Knowledge Graph visual: {e}")
@@ -202,7 +206,7 @@ else:
                         st.json(display_meta)
                         if graph_html_str:
                             st.subheader("Knowledge Graph Traversal")
-                            components.html(graph_html_str, height=500, scrolling=True)
+                            components.html(graph_html_str, height=800, scrolling=True)
                         
                     st.session_state.chat_history.append({
                         "role": "assistant", 
