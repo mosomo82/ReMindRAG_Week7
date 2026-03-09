@@ -4,6 +4,7 @@ import tempfile
 import json
 import logging
 from typing import List, Dict
+import streamlit.components.v1 as components
 
 # Apply some basic configurations to be wide and title.
 st.set_page_config(page_title="ReMindRAG Standalone UI", page_icon="🧠", layout="wide")
@@ -152,7 +153,11 @@ else:
             st.write(msg["content"])
             if "metadata" in msg:
                 with st.expander("Show Retrieval Details"):
-                    st.json(msg["metadata"])
+                    display_meta = {k: v for k, v in msg["metadata"].items() if k != "graph_html"}
+                    st.json(display_meta)
+                    if "graph_html" in msg["metadata"]:
+                        st.subheader("Knowledge Graph Traversal")
+                        components.html(msg["metadata"]["graph_html"], height=500, scrolling=True)
                     
     # Chat Input
     query = st.chat_input("Ask a question...")
@@ -164,25 +169,57 @@ else:
             
         # Agent response
         with st.chat_message("assistant"):
-            with st.spinner("Traversing Knowledge Graph..."):
+            with st.status("Traversing Knowledge Graph...", expanded=True) as status:
                 try:
+                    st.write("Searching database and prompting LLM routing agents...")
                     response, chunks, edges = st.session_state.rag_instance.generate_response(query, force_do_rag=True)
                     
-                    st.write(response)
-                    
+                    st.write("Synthesizing final answer...")
                     chunks_count = sum(len(c) for c in chunks) if isinstance(chunks, list) else (len(chunks) if chunks else 0)
                     
-                    meta = {
+                    st.write("Rendering Knowledge Graph...")
+                    st.session_state.rag_instance.refresh_kg()
+                    graph_html_str = ""
+                    try:
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_html:
+                            tmp_html_path = tmp_html.name
+                        st.session_state.rag_instance.kg.save_as_pyvis_for_quick_query(tmp_html_path, query)
+                        with open(tmp_html_path, "r", encoding="utf-8") as f:
+                            graph_html_str = f.read()
+                            
+                        # Adjust PyVis hardcoded 1200px height for Streamlit viewing
+                        graph_html_str = graph_html_str.replace('1200px', '800px')
+                        
+                        os.unlink(tmp_html_path)
+                    except Exception as e:
+                        logging.error(f"Failed to generate Knowledge Graph visual: {e}")
+
+                    meta: Dict[str, str | int] = {
                         "Chunks Retrieved": chunks_count,
                         "Graph Edges Traversed": len(edges)
                     }
-                    with st.expander("Show Retrieval Details"):
-                        st.json(meta)
-                        
-                    st.session_state.chat_history.append({
-                        "role": "assistant", 
-                        "content": response,
-                        "metadata": meta
-                    })
+                    if graph_html_str:
+                        meta["graph_html"] = graph_html_str
+
+                    status.update(label="Query complete!", state="complete", expanded=False)
                 except Exception as e:
+                    status.update(label="Error processing query", state="error", expanded=False)
                     st.error(f"Error generating response: {str(e)}")
+                    response = "Sorry, an error occurred during generation."
+                    meta = {}
+
+            if response != "Sorry, an error occurred during generation.":
+                st.write(response)
+                with st.expander("Show Retrieval Details"):
+                    # Extract non-HTML metadata for display
+                    display_meta = {k: v for k, v in meta.items() if k != "graph_html"}
+                    st.json(display_meta)
+                    if meta.get("graph_html"):
+                        st.subheader("Knowledge Graph Traversal")
+                        components.html(meta["graph_html"], height=800, scrolling=True)
+                    
+                st.session_state.chat_history.append({
+                    "role": "assistant", 
+                    "content": response,
+                    "metadata": meta
+                })

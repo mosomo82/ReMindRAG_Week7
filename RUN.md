@@ -78,8 +78,8 @@ python tests/test_reproducibility.py
 python example/example.py
 
 # Original Flask WebUI
-python -m ReMindRag.webui.webui
-# Open http://127.0.0.1:5000
+# Note: The WebUI requires an initialized backend. It launches automatically at the end of example.py
+# Open http://127.0.0.1:5000 after running python example/example.py
 
 # Standalone Streamlit App (New)
 streamlit run streamlit_app.py
