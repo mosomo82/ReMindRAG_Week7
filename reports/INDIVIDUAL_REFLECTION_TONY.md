@@ -1,13 +1,11 @@
 # Individual Reflection: Tony Nguyen
 
 **Specific Technical Contributions**
-**Specific Technical Contributions**
 For this reproducibility lab, I led the effort to audit and reproduce the ReMindRAG repository. The original codebase lacked environmental isolation, which caused immediate crashes upon execution. My primary technical contribution was designing a highly deterministic execution environment. I built a comprehensive automation suite consisting of a `Makefile`, a cross-platform `reproduce.sh` pipeline for Linux/macOS, and a native PowerShell `reproduce.ps1` script for Windows users. I also wrote `tests/test_reproducibility.py`—a 17-test suite that automatically validates the presence of critical directories, correct path concatenation (resolving OS-specific slashes), and the enforcement of predictable random seeds. To permanently resolve hardware dependencies, I authored a Docker workflow and resolved PyPI wheel incompatibilities for Streamlit Cloud deployment (e.g., separating CUDA-specific `+cu126` PyTorch wheels from the standard `requirements.txt`). Finally, I introduced an `.env.template` logic for frictionless and secure API key onboarding.
 
 **Challenges Encountered**
 The most significant challenge was hitting rigid API rate limits and quota constraints during the knowledge graph traversal steps. Because ReMindRAG queries an LLM iteratively to extract entities and map relationships, a single document evaluation exhausted my OpenAI credits rapidly. Furthermore, the evaluation script (`start_LooGLE.py`) lacked a resume guard; when my API quota blocked a run midway through, the script crashed, and restarting it wiped all previous progress. I solved this by engineering a checkpointing system (`if os.path.exists("input.json"): continue`), allowing the orchestrator to resume precisely where it failed.
 
-**What I Learned About Reproducibility**
 **What I Learned About Reproducibility**
 This lab fundamentally changed how I view open-source ML development. I realized that a working script on an author’s laptop is meaningless if the environment isn't strictly defined. I learned that reproducibility isn't merely about pinning `pip` versions; it requires isolating local cache drift (which caused ChromaDB dimension mismatch errors when toggling between Nomic and MiniLM), gracefully handling missing expected directories, and identifying hidden structural assumptions in dependencies. For example, the `NaiveChunker` crashed strictly on Markdown tables because NLTK's `sent_tokenize` assumed period-terminated lines, forcing me to pre-split by newlines. Furthermore, I learned the importance of separating configurations from the core logic so users don't have to hunt through Python files to change a hyperparameter. 
 
