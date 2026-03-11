@@ -1,3 +1,9 @@
+# ── Secrets & credentials (NEVER commit real keys) ──────────────────────────
+api_key.json
+.env
+# .env.template is intentionally tracked (safe placeholder)
+
+# ── Model / cache dirs ────────────────────────────────────────────────────────
 model_cache/
 !model_cache/.gitkeep
 Rag_Cache/
