@@ -12,6 +12,7 @@ Unlike traditional methods, it resolves long dependencies and multi-hop reasonin
 > **CS 5542 — Lab 7 Reproducibility Submission**
 > Team: Tony Nguyen · Daniel Evans· Joel Vinas
 > Repository: [mosomo82/ReMindRAG_Week7](https://github.com/mosomo82/ReMindRAG_Week7)
+> 📺 **Demo Video:** [Watch on YouTube](https://www.youtube.com/watch?v=PB548_EQmOI)
 
 ---
 
