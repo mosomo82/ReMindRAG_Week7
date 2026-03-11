@@ -67,6 +67,7 @@ huggingface-cli login
 
 ### Step 3: Run
 
+**Linux / Mac / Git Bash:**
 ```bash
 # Smoke test (no API key needed — uses mock agents)
 python tests/smoke_test.py
@@ -77,9 +78,20 @@ python tests/test_reproducibility.py
 # Example with real API
 python example/example.py
 
-# Original Flask WebUI
-# Note: The WebUI requires an initialized backend. It launches automatically at the end of example.py
-# Open http://127.0.0.1:5000 after running python example/example.py
+# Standalone Streamlit App (New)
+streamlit run streamlit_app.py
+```
+
+**Windows PowerShell:**
+```powershell
+# Smoke test (no API key needed — uses mock agents)
+py tests\smoke_test.py
+
+# Full 17-test reproducibility audit
+py tests\test_reproducibility.py
+
+# Example with real API
+py example\example.py
 
 # Standalone Streamlit App (New)
 streamlit run streamlit_app.py
@@ -102,6 +114,9 @@ make clean    # Remove cache and generated files
 
 ## Evaluation Scripts
 
+> ⚠️ **Windows PowerShell users:** Use backtick (`` ` ``) for line continuation, NOT backslash (`\`). Or use the single-line versions below.
+
+**Linux / Mac / Git Bash:**
 ```bash
 # LooGLE evaluation (requires OpenAI API key + dataset)
 python eval/eval_LooGLE.py \
@@ -115,6 +130,29 @@ python eval/eval_LooGLE.py \
 python eval/eval_Hotpot.py \
   --seed 42 \
   --judge_model_name gpt-4o-mini
+```
+
+**Windows PowerShell (multi-line with backtick):**
+```powershell
+# LooGLE evaluation
+py eval\eval_LooGLE.py `
+  --title_index 0 `
+  --data_type longdep_qa `
+  --question_type origin `
+  --seed 42 `
+  --judge_model_name gpt-4o-mini
+
+# HotpotQA evaluation
+py eval\eval_Hotpot.py `
+  --seed 42 `
+  --judge_model_name gpt-4o-mini
+```
+
+**Windows PowerShell (single line — always safe):**
+```powershell
+py eval\eval_LooGLE.py --title_index 0 --data_type longdep_qa --question_type origin --seed 42 --judge_model_name gpt-4o-mini
+
+py eval\eval_Hotpot.py --seed 42 --judge_model_name gpt-4o-mini
 ```
 
 ---

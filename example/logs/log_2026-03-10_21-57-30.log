@@ -1,0 +1,6 @@
+ReMindRag - INFO - Start Initail ReMindRag.
+ReMindRag - INFO - Initialize ReMindRag Successfully.
+ReMindRag - INFO - Load File: C:\Users\mtuan\OneDrive\Documents\GitHub\ReMindRAG_Week7\example\example_data.txt.
+Database - INFO - Chunking...
+Database - INFO - Get 2 Chunks.
+Database - INFO - Do Infomation Extraction in Chunk 0/2
