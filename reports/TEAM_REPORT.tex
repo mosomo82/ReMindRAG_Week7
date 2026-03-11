@@ -23,6 +23,24 @@
 \section*{Division of Responsibilities}
 Our team successfully executed Lab 7 by dividing the workload into three distinct, non-overlapping phases, allowing for parallel execution and individual accountability.
 
+\subsection*{Project Component Ownership \& Division of Labor Summary}
+To ensure rapid iteration and clear accountability, we mapped our division of labor directly to the core architectural components of the codebase:
+
+\vspace{1em}
+\noindent\begin{tabular}{|p{0.25\linewidth}|p{0.15\linewidth}|p{0.5\linewidth}|}
+\hline
+\textbf{Project Component} & \textbf{Primary Owner} & \textbf{Description of Responsibilities} \\
+\hline
+\textbf{Environment \& Infrastructure} & Tony Nguyen & Authored \texttt{Makefile}, \texttt{reproduce.sh/ps1}, Dockerfile, \texttt{.env.template}, and test suite (\texttt{test\_reproducibility.py}); fixed PyTorch/NLTK dependency bugs and Streamlit Cloud deployments. \\
+\hline
+\textbf{Evaluation Metrics \& Testing} & Daniel Evans & Built \texttt{tests/smoke\_test.py}, integrated quantitative metrics (ROUGE, BLEU, BERTScore), and designed entity faithfulness scoring templates. \\
+\hline
+\textbf{AI Agents \& Cost Control} & Joel Vinas & Audited LLM orchestration (\texttt{eval\_LooGLE.py}), integrated dynamic judge model selection (e.g., \texttt{gpt-4o-mini}), applied global graph deterministic seeds, and designed CoT injection points. \\
+\hline
+\end{tabular}
+\vspace{1em}
+
+
 \subsection*{Tony Nguyen — Related Work Reproduction \& Core Pipeline Audit}
 \textbf{Primary Ownership:} ReMindRAG Reproduction and Environmental Architecture
 \begin{itemize}[leftmargin=*]
