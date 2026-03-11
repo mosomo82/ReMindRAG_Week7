@@ -1,4 +1,4 @@
-﻿accelerate==1.5.2
+accelerate==1.5.2
 aiohappyeyeballs==2.4.4
 aiohttp==3.11.10
 aiosignal==1.2.0
@@ -140,9 +140,9 @@ sympy==1.13.1
 tenacity==9.0.0
 threadpoolctl==3.6.0
 tokenizers==0.21.0
-torch==2.6.0+cu126
-torchaudio==2.6.0+cu126
-torchvision==0.21.0+cu126
+torch==2.6.0
+torchaudio==2.6.0
+torchvision==0.21.0
 tqdm==4.67.1
 traitlets==5.14.3
 transformers==4.49.0
@@ -163,9 +163,6 @@ xxhash==3.5.0
 yarl==1.18.0
 zipp==3.21.0
 streamlit>=1.40.0
-openai>=1.0.0
-streamlit>=1.40.0
-openai>=1.0.0
 sentence-transformers>=3.0.0
 einops>=0.8.0
 nltk>=3.9.0

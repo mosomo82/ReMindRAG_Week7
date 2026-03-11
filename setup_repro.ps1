@@ -21,11 +21,23 @@ Write-Host "Activating venv and installing dependencies..." -ForegroundColor Cya
 . .\venv\Scripts\Activate.ps1
 
 # Upgrade pip
-python -m pip install --upgrade pip
+.\venv\Scripts\python.exe -m pip install --upgrade pip
 
-# Install core dependencies with pinned exact versions
-Write-Host "Installing core dependencies..." -ForegroundColor Cyan
-pip install torch==2.6.0+cu126 transformers==4.49.0 sentence-transformers==3.4.1 chromadb==0.6.3 Flask==3.1.0 fastapi==0.115.11 openai==1.60.1 networkx==3.4.2 pyvis==0.3.2 datasets==3.3.2 huggingface_hub==0.29.2 tqdm==4.67.1 pandas==2.2.3 numpy==2.2.2 matplotlib==3.10.1 rich==13.9.4 --extra-index-url https://download.pytorch.org/whl/cu126
+# Step 1: PyTorch with CUDA (large download, separate step)
+Write-Host "Installing PyTorch (CUDA 12.6)..." -ForegroundColor Cyan
+.\venv\Scripts\pip.exe install torch==2.6.0+cu126 torchaudio==2.6.0+cu126 torchvision==0.21.0+cu126 --extra-index-url https://download.pytorch.org/whl/cu126
+
+# Step 2: Core ML/NLP dependencies
+Write-Host "Installing ML dependencies..." -ForegroundColor Cyan
+.\venv\Scripts\pip.exe install transformers==4.49.0 sentence-transformers==3.4.1 chromadb==0.6.3 huggingface_hub==0.29.2 datasets==3.3.2 nltk==3.9.1
+
+# Step 3: API and web dependencies
+Write-Host "Installing API/web dependencies..." -ForegroundColor Cyan
+.\venv\Scripts\pip.exe install openai==1.60.1 Flask==3.1.0 fastapi==0.115.11 streamlit>=1.40.0
+
+# Step 4: Utilities and visualization
+Write-Host "Installing utilities..." -ForegroundColor Cyan
+.\venv\Scripts\pip.exe install networkx==3.4.2 pyvis==0.3.2 tqdm==4.67.1 pandas==2.2.3 numpy==2.2.2 matplotlib==3.10.1 rich==13.9.4 python-docx==1.1.2
 
 Write-Host "Setup complete." -ForegroundColor Green
-Write-Host "To activate the environment, run: .\venv\Scripts\Activate.ps1"
+Write-Host "To run the app: .\venv\Scripts\streamlit.exe run streamlit_app.py" -ForegroundColor Green
