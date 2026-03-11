@@ -1,0 +1,38 @@
+# --- PyTorch CPU (Required to prevent Streamlit Cloud from crashing/running out of memory) ---
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch~=2.6.0
+torchaudio~=2.6.0
+torchvision~=0.21.0
+
+# --- Web & APIs ---
+streamlit>=1.40.0
+fastapi
+Flask
+uvicorn
+requests
+httpx
+
+# --- AI, ML & NLP ---
+openai
+transformers
+sentence-transformers
+accelerate
+datasets
+huggingface_hub
+nltk>=3.9.0
+scikit-learn
+scipy
+
+# --- Database & Graph ---
+chromadb
+networkx
+pyvis>=0.3.1
+
+# --- Data Processing & Utilities ---
+numpy
+pandas
+pydantic
+pillow
+matplotlib
+sympy
+python-dotenv
