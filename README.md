@@ -50,24 +50,26 @@ make streamlit   # Run the standalone Streamlit interface
 | [RUN.md](./RUN.md) | Complete run instructions — Docker, native, Makefile, eval |
 | [REPRO_AUDIT.md](./REPRO_AUDIT.md) | 14-issue reproducibility audit with severity ratings and test evidence |
 | [RELATED_WORK_REPRO.md](./RELATED_WORK_REPRO.md) | Reproduction attempt — what worked, what failed, gaps, improvements |
-| [reproduce.sh](./reproduce.sh) | Cross-platform automation script |
+| [reproduce.sh](./reproduce.sh) | Cross-platform automation script (Linux/macOS) |
+| [reproduce.ps1](./reproduce.ps1) | PowerShell automation script (Windows) |
 | [Makefile](./Makefile) | Convenience targets: setup, smoke, test, docker, clean |
 | [config.yaml](./config.yaml) | Config-driven execution — all hyperparameters in one place |
 | [tests/smoke_test.py](./tests/smoke_test.py) | Smoke test — exits 0 on success, writes JSON artifact |
 | [tests/test_reproducibility.py](./tests/test_reproducibility.py) | 17-test audit suite covering all 14 reproducibility fixes |
 | [artifacts/smoke_test_result.json](./artifacts/smoke_test_result.json) | Sample output artifact |
+| [.env.template](./.env.template) | Secure onboarding template for API keys |
 
 ---
 
-## Reproducibility Fixes (14 Issues Resolved)
+## Reproducibility Fixes (17 Issues Resolved)
 
 | Severity | Issues Fixed |
 |----------|-------------|
-| CRITICAL | Missing directory creation (`model_cache/`, `chroma_data/`, `logs/`, `temp/`), UTF-16 encoded requirements file, missing CUDA wheel index URL |
-| HIGH | Hardcoded judge model, missing eval resume guard, `daatabase_description` typo, undocumented HuggingFace auth |
-| MEDIUM | Windows path separators → `os.path.join`, CWD-relative imports → `__file__`-relative, missing `--seed` arg |
+| CRITICAL | Missing directory creation (`model_cache/`, `chroma_data/`, `logs/`, `temp/`), UTF-16 encoded requirements file, missing CUDA wheel index URL. <br> **NEW:** PyTorch `+cu126` wheels crashed Streamlit Cloud deployments; fixed by dropping namespace to standard PyPI wheels. |
+| HIGH | Hardcoded judge model, missing eval resume guard, `daatabase_description` typo, undocumented HuggingFace auth. <br> **NEW:** `NaiveChunker` crashed on Markdown tables (token sequence > 512); fixed by pre-splitting on newlines before NLTK `sent_tokenize`. |
+| MEDIUM | Windows path separators → `os.path.join`, CWD-relative imports → `__file__`-relative, missing `--seed` arg. <br> **NEW:** Added `reproduce.ps1` for native Windows environment bootstrapping. Added `einops` dependency explicitly required for gated Nomic MoE models. |
 
-All fixes verified by automated test suite: **17/17 PASS**.
+All fixes verified by automated test suite and Streamlit runtime validations.
 
 ---
 

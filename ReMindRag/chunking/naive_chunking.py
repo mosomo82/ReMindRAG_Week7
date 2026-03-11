@@ -6,7 +6,7 @@ from transformers import AutoTokenizer
 class NaiveChunker(ChunkerBase):
     def __init__(self, model_name, model_cache_dir, context_sentence: int=1, max_token_length = 1200):
         super().__init__()
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir = model_cache_dir)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir = model_cache_dir, model_max_length=10000)
         self.max_token_length = max_token_length
 
         self.context_sentence = context_sentence
@@ -14,7 +14,10 @@ class NaiveChunker(ChunkerBase):
     
     def split_text_by_sentences(self, text: str, language) -> List[str]:
         if language == 'en':
-            segments = sent_tokenize(text)
+            segments = []
+            for line in text.split('\n'):
+                if line.strip():
+                    segments.extend(sent_tokenize(line.strip()))
         elif language == 'zh':
             segments = []
             temp_sentence = ""

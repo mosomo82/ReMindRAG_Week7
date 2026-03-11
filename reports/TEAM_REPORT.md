@@ -8,9 +8,10 @@ Our team successfully executed Lab 7 by dividing the workload into three distinc
 **Primary Ownership:** ReMindRAG Reproduction and Environmental Architecture
 *   **Repo Selection & Setup:** Selected ReMindRAG as the related work, cloned the repository, and audited the initial environment.
 *   **Dependency Management:** Identified and fixed critical containerization blockers (e.g., missing CUDA package URLs, UTF-16 encoding errors in `requirements.txt`).
-*   **Reproducibility Auditing:** Authored the `REPRO_AUDIT.md` document, logging 14 distinct reproducibility failures categorized by severity.
-*   **Automation:** Developed the `reproduce.sh` script and `Makefile` to allow single-command execution of the RAG pipeline.
-*   **Dockerization:** Created a multi-stage Dockerfile with `.dockerignore` to completely isolate the execution environment from local state drift.
+*   **Reproducibility Auditing:** Authored the `REPRO_AUDIT.md` document, logging 17 distinct reproducibility failures categorized by severity.
+*   **Automation:** Developed the `reproduce.sh` script (Linux/macOS) and `reproduce.ps1` (Windows/PowerShell) to allow single-command execution of the RAG pipeline.
+*   **Dockerization & Cloud Deployment:** Created a multi-stage Dockerfile and debugged Streamlit Cloud deployment failures by resolving PyTorch PyPI wheel conflicts (`+cu126`).
+*   **Dependency Auditing:** Fixed a hidden tokenizer crash where NLTK failed to chunk Markdown tables, and mapped missing architectural dependencies (`einops` for Nomic MoE).
 
 ### Daniel Evans (Member 2) — Evaluation Metrics & Baseline Implementation
 **Primary Ownership:** Quantitative Benchmarking
