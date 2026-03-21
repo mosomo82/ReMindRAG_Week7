@@ -13,9 +13,9 @@ st.set_page_config(page_title="ReMindRAG Standalone UI", page_icon="🧠", layou
 # RAG Initialization
 # =====================================================================
 @st.cache_resource(show_spinner="Loading ReMindRAG components...")
-def initialize_rag(api_key: str, embedding_model="sentence-transformers/all-MiniLM-L6-v2", llm_model="gpt-4o-mini", hf_token: str = ""):
+def initialize_rag(api_key: str, llm_provider: str = "OpenAI", embedding_model="sentence-transformers/all-MiniLM-L6-v2", llm_model="gpt-4o-mini", hf_token: str = ""):
     """Initializes the ReMindRAG pipeline components."""
-    from ReMindRag.llms import OpenaiAgent
+    from ReMindRag.llms import OpenaiAgent, AnthropicAgent, GeminiAgent
     from ReMindRag.embeddings import HgEmbedding
     from ReMindRag.chunking import NaiveChunker
     from ReMindRag import ReMindRag
@@ -38,10 +38,21 @@ def initialize_rag(api_key: str, embedding_model="sentence-transformers/all-Mini
     tokenizer = AutoTokenizer.from_pretrained(embedding_model, cache_dir=model_cache_dir)
     
     # Agents
-    st.sidebar.text("Initializing LLM Agents...")
-    chunk_agent = OpenaiAgent(base_url, api_key, llm_model)
-    kg_agent = OpenaiAgent(base_url, api_key, llm_model)
-    generate_agent = OpenaiAgent(base_url, api_key, llm_model)
+    st.sidebar.text(f"Initializing {llm_provider} Agents...")
+    if llm_provider == "OpenAI":
+        chunk_agent = OpenaiAgent(base_url, api_key, llm_model)
+        kg_agent = OpenaiAgent(base_url, api_key, llm_model)
+        generate_agent = OpenaiAgent(base_url, api_key, llm_model)
+    elif llm_provider == "Anthropic":
+        chunk_agent = AnthropicAgent(api_key, llm_model)
+        kg_agent = AnthropicAgent(api_key, llm_model)
+        generate_agent = AnthropicAgent(api_key, llm_model)
+    elif llm_provider == "Gemini":
+        chunk_agent = GeminiAgent(api_key, llm_model)
+        kg_agent = GeminiAgent(api_key, llm_model)
+        generate_agent = GeminiAgent(api_key, llm_model)
+    else:
+        raise ValueError(f"Unsupported LLM Provider: {llm_provider}")
     
     # Pipeline
     rag_instance = ReMindRag(
@@ -65,17 +76,13 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "rag_instance" not in st.session_state:
     st.session_state.rag_instance = None
-if "api_key" not in st.session_state:
-    # Try to load from default api_key.json if available
-    default_key = ""
+if "api_keys" not in st.session_state:
+    st.session_state.api_keys = {}
     try:
         with open("api_key.json", "r") as f:
-            keys = json.load(f)
-            if isinstance(keys, list) and len(keys) > 0:
-                default_key = keys[0].get("api_key", "")
-    except Exception:
-        pass
-    st.session_state.api_key = default_key
+            st.session_state.api_keys = json.load(f)
+    except Exception as e:
+        st.warning(f"Could not load api_key.json: {e}")
 
 # =====================================================================
 # Sidebar Layout
@@ -86,11 +93,24 @@ with st.sidebar:
     st.markdown("---")
     
     st.header("Configuration")
-    st.session_state.api_key = st.text_input("OpenAI API Key:", value=st.session_state.api_key, type="password")
     
-    # Model Configurations
-    llm_choice = st.selectbox("LLM Model", ["gpt-4o-mini", "gpt-3.5-turbo", "gpt-4o"], index=0)
-    emb_choice = st.selectbox("Embedding Model", [
+    llm_provider = st.selectbox("LLM Provider", ["OpenAI", "Anthropic", "Gemini"], index=2) # Default to Gemini per user request
+    
+    # Retrieve the key securely from the loaded config rather than asking the user
+    provider_config = st.session_state.api_keys.get(llm_provider, {})
+    current_api_key = provider_config.get("api_key", "")
+    
+    # Model Configurations based on Provider
+    if llm_provider == "OpenAI":
+        default_models = ["gpt-4o-mini", "gpt-3.5-turbo", "gpt-4o"]
+    elif llm_provider == "Anthropic":
+        default_models = ["claude-3-5-sonnet-latest", "claude-3-5-haiku-latest", "claude-3-opus-latest"]
+    else: # Gemini
+        default_models = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-2.0-flash-lite"]
+        
+    llm_choice = st.selectbox("LLM Model", default_models, index=0)
+    
+    emb_choice = st.selectbox("Embedding Model (Local HF)", [
         "sentence-transformers/all-MiniLM-L6-v2", 
         "nomic-ai/nomic-embed-text-v2-moe"
     ], index=0)
@@ -101,17 +121,18 @@ with st.sidebar:
         st.caption("Required for gated HuggingFace models.")
         
     if st.button("Initialize ReMindRAG"):
-        if not st.session_state.api_key:
-            st.error("Please provide an OpenAI API Key!")
+        if not current_api_key or current_api_key.startswith("YOUR_"):
+            st.error(f"Please configure a valid {llm_provider} API Key in api_key.json!")
         else:
             try:
                 st.session_state.rag_instance = initialize_rag(
-                    api_key=st.session_state.api_key, 
+                    api_key=current_api_key, 
+                    llm_provider=llm_provider,
                     embedding_model=emb_choice, 
                     llm_model=llm_choice,
                     hf_token=hf_token
                 )
-                st.success("Successfully initialized RAG pipeline!")
+                st.success(f"Successfully initialized RAG pipeline with {llm_provider}!")
             except Exception as e:
                 st.error(f"Error initializing: {str(e)}")
                 
@@ -145,7 +166,7 @@ st.title("ReMindRAG Query Interface")
 st.markdown("Ask questions against your indexed documents. ReMindRAG will traverse the Knowledge Graph to find the answer.")
 
 if not st.session_state.rag_instance:
-    st.info("👈 Please enter your API key and click 'Initialize ReMindRAG' in the sidebar to begin.")
+    st.info("👈 Please select a provider and click 'Initialize ReMindRAG' in the sidebar to begin. (Ensure your keys are in `api_key.json`)")
 else:
     # Display chat history
     for msg in st.session_state.chat_history:
