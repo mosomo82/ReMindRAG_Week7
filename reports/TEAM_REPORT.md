@@ -33,9 +33,21 @@ To ensure rapid iteration and clear accountability, we mapped our division of la
 - **UI Updates:** Updated the Streamlit application interface (`streamlit_app.py`) to allow dynamic, on-the-fly selection of the active language model.
 - **Security & Credential Management:** Hardened repository security by removing `api_key.json` from version control tracking, configuring `.gitignore`, and providing an `api_key.json.example` template for user setup.
 
+### Daniel Evans (Member 2) — LLM Integration & Security Enhancements
+
+**Primary Ownership:** Multi-Model Support and API Management
+
+- **Model Integration:** Integrated Anthropic and Gemini as alternative LLM providers in addition to the existing OpenAI implementation, creating dedicated modules for each (`ReMindRag/llms/anthropic_api.py`, `ReMindRag/llms/gemini_api.py`).
+- **UI Updates:** Updated the Streamlit application interface (`streamlit_app.py`) to allow dynamic, on-the-fly selection of the active language model.
+- **Security & Credential Management:** Hardened repository security by removing `api_key.json` from version control tracking, configuring `.gitignore`, and providing an `api_key.json.example` template for user setup.
+
 ### Joel Vinas (Member 3) — Advanced Prompting & Quality Enhancements
 
 **Primary Ownership:** LLM Reasoning and System Robustness
+
+- **Reasoning Injection:** Designed the upgrade path for implementing Chain-of-Thought (CoT) and Self-Consistency methodologies into the entity extraction agent.
+- **Cost Control:** Refactored the evaluation orchestrator (`eval_LooGLE.py`) to allow dynamic switching of the judge model (e.g., overriding hardcoded `gpt-4o` with `gpt-4o-mini`).
+- **System Improvements:** Integrated the `--seed` parameter globally to enforce strict deterministic randomness across all PyTorch and NumPy operations.
 
 - **Reasoning Injection:** Designed the upgrade path for implementing Chain-of-Thought (CoT) and Self-Consistency methodologies into the entity extraction agent.
 - **Cost Control:** Refactored the evaluation orchestrator (`eval_LooGLE.py`) to allow dynamic switching of the judge model (e.g., overriding hardcoded `gpt-4o` with `gpt-4o-mini`).
