@@ -1,0 +1,15 @@
+{
+  "LooGLE": {
+    "title_0": 0.6667,
+    "title_1": 0.7778,
+    "title_2": 0.8182,
+    "title_3": 0.7000,
+    "title_4": 0.6000,
+    "average_F1": 0.7125
+  },
+  "HotpotQA": {
+    "total_questions": 50,
+    "correct_answers": 38,
+    "average_F1": 0.7600
+  }
+}

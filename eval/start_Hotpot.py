@@ -4,14 +4,15 @@ import os
 import time
 from datetime import datetime
 import json
+import sys
 
-
-def run_title_test(title_index, test_name, model_name, question_type):
-    cmd = [ "python", "eval_Hotpot.py", 
+def run_title_test(title_index, test_name, model_name, question_type, judge_model_name):
+    cmd = [ sys.executable, "eval_Hotpot.py", 
             "--title_index", str(title_index), 
             "--test_name", test_name,
             "--model_name", model_name,
-            "--question_type", question_type
+            "--question_type", question_type,
+            "--judge_model_name", judge_model_name
             ]
     
     print(f"Running command: {' '.join(cmd)}")
@@ -27,6 +28,7 @@ def main():
     parser.add_argument('--parallel', type=int, default=3, help='Number of parallel tests')
     parser.add_argument('--question_type', type=str, default="origin", choices=["origin", "similar", "different"], help='Question Type: origin, similar or different')
     parser.add_argument('--model_name', type=str, default="gpt-4o-mini", help='Backbone model name')
+    parser.add_argument('--judge_model_name', type=str, default="gpt-4o-2024-11-20", help='Model for answer rewrite/check judge agents')
     
     args = parser.parse_args()
     
@@ -36,6 +38,7 @@ def main():
     parallel = args.parallel
     model_name = args.model_name
     question_type = args.question_type
+    judge_model_name = args.judge_model_name
     
     if parallel < 1:
         parallel = 1
@@ -72,7 +75,7 @@ def main():
                 current_index += 1
                 continue
 
-            process = run_title_test(current_index, test_name, model_name, question_type)
+            process = run_title_test(current_index, test_name, model_name, question_type, judge_model_name)
             active_processes.append((process, current_index))
             print(f"Started test for title index {current_index}, PID: {process.pid}")
             current_index += 1
