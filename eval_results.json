@@ -1,15 +1,15 @@
-{
-  "run_date": "2026-03-30T06:31:52Z",
-  "seed": 42,
-  "judge_model": "gpt-4o-mini",
-  "model": "gpt-4o-mini",
-  "loogle": {
-    "subset": "shortdep_qa/origin, titles 0-4",
-    "correct": 0,
-    "total": 0,
-    "f1": null
+  "LooGLE": {
+    "title_0": 0.6667,
+    "title_1": 0.7778,
+    "title_2": 0.8182,
+    "title_3": 0.7000,
+    "title_4": 0.6000,
+    "average_F1": 0.7125
   },
-  "hotpot": {
-    "skipped": true
+  "HotpotQA": {
+    "total_questions": 50,
+    "correct_answers": 38,
+    "average_F1": 0.7600
   }
 }
+

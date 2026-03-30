@@ -4,9 +4,10 @@ import os
 import time
 from datetime import datetime
 import json
+import sys
 
 def run_title_test(title_index, test_name, data_type, question_type, model_name, judge_model_name):
-    cmd = [ "python", "eval_LooGLE.py", 
+    cmd = [ sys.executable, "eval_LooGLE.py", 
             "--title_index", str(title_index), 
             "--test_name", test_name,
             "--data_type", data_type,

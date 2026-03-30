@@ -27,3 +27,9 @@ eval/database/*
 !eval/database/.gitkeep
 
 eval/data_modify/
+
+# Ignore API keys
+api_key.json
+
+# Temp Folders
+**/temp/
