@@ -1,0 +1,4 @@
+cuda: False
+Test Title: José Luis Picardo
+Logger Level: 10.
+José Luis Picardo --- Data already loaded.

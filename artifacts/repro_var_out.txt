@@ -1,0 +1,45 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+======================================================================
+  ReMindRAG Reproducibility Variance Test Suite
+  2026-03-30 00:23:28
+======================================================================
+
+
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]
+Loading weights: 100%|##########| 103/103 [00:00<00:00, 5681.17it/s]
+BertModel LOAD REPORT from: sentence-transformers/all-MiniLM-L6-v2
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED	:can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+test_1_same_chunks (__main__.Test1SameChunks.test_1_same_chunks) ... ok
+test_2_same_chunk_count (__main__.Test2SameChunkCount.test_2_same_chunk_count) ... ok
+test_3_same_nodes (__main__.Test3SameNodes.test_3_same_nodes) ... FAIL
+test_4_deterministic_answer (__main__.Test4DeterministicAnswer.test_4_deterministic_answer) ... ok
+
+======================================================================
+FAIL: test_3_same_nodes (__main__.Test3SameNodes.test_3_same_nodes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\mtuan\OneDrive\Documents\GitHub\ReMindRAG_Week7\tests\test_repro_variance.py", line 189, in test_3_same_nodes
+    self.assertTrue(
+    ~~~~~~~~~~~~~~~^
+        any("paladin" in n.lower() for n in nodes_a),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        f"Expected 'Paladin' in KG nodes, got: {sorted(nodes_a)[:10]}"
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: False is not true : Expected 'Paladin' in KG nodes, got: ['1', '10', '11', '12', '13', '14', '15', '16', '17', '18']
+
+----------------------------------------------------------------------
+Ran 4 tests in 11.964s
+
+FAILED (failures=1)
+Logger Level: 30.
+
+======================================================================
+  [FAIL] 1 TEST(S) FAILED ù review output above.
+======================================================================

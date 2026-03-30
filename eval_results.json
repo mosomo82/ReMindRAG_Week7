@@ -1,0 +1,15 @@
+{
+  "run_date": "2026-03-30T06:31:52Z",
+  "seed": 42,
+  "judge_model": "gpt-4o-mini",
+  "model": "gpt-4o-mini",
+  "loogle": {
+    "subset": "shortdep_qa/origin, titles 0-4",
+    "correct": 0,
+    "total": 0,
+    "f1": null
+  },
+  "hotpot": {
+    "skipped": true
+  }
+}
